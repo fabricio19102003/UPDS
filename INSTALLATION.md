@@ -10,7 +10,9 @@ de trabajo. Hay **tres metodos** segun la herramienta que uses.
 - [Metodo 1: Claude.ai (web)](#metodo-1-claudeai-web)
 - [Metodo 2: Claude Code (terminal)](#metodo-2-claude-code-terminal)
 - [Metodo 3: OpenCode y otros agentes](#metodo-3-opencode-y-otros-agentes)
+- [Instalar la skill Angular](#instalar-la-skill-angular)
 - [Verificar la instalacion](#verificar-la-instalacion)
+- [Verificar Angular skill](#verificar-angular-skill)
 - [Uso basico](#uso-basico)
 - [Preguntas frecuentes](#preguntas-frecuentes)
 
@@ -198,6 +200,93 @@ las skills.
 
 ---
 
+## Instalar la skill Angular
+
+La skill `angular` se instala de la misma manera que `upds-style`, solo cambia
+el nombre de la carpeta. A continuacion se detallan los comandos para cada metodo.
+
+### Claude.ai (web) — Angular
+
+1. Segui los mismos pasos que para `upds-style` (Metodo 1 arriba)
+2. Al comprimir, usa la carpeta `SKILLS/angular/` en lugar de `SKILLS/upds-style/`
+
+La estructura del ZIP debe ser:
+
+```
+angular.zip
+├── SKILL.md
+└── references/
+    ├── architecture.md
+    ├── components.md
+    ├── signals.md
+    ├── state-management.md
+    ├── dependency-injection.md
+    ├── routing.md
+    ├── forms.md
+    ├── templates.md
+    ├── http-data-layer.md
+    ├── testing.md
+    ├── performance.md
+    ├── ssr-hydration.md
+    ├── security.md
+    ├── accessibility.md
+    ├── build-tooling.md
+    └── migration.md
+```
+
+### Claude Code (terminal) — Angular
+
+**Opcion A: A nivel de proyecto**
+
+```bash
+# Desde la raiz de tu proyecto Angular
+mkdir -p .claude/skills
+
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/angular .claude/skills/
+rm -rf /tmp/UPDS
+```
+
+**Opcion B: Global (todos los proyectos)**
+
+```bash
+mkdir -p ~/.config/claude/skills
+
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/angular ~/.config/claude/skills/
+rm -rf /tmp/UPDS
+```
+
+**Opcion C: Git submodule**
+
+Si ya tenes el submodulo `.upds` configurado (ver Metodo 2 arriba):
+
+```bash
+mkdir -p .claude/skills
+ln -s ../../.upds/SKILLS/angular .claude/skills/angular
+```
+
+### OpenCode — Angular
+
+```bash
+# Global
+mkdir -p ~/.config/opencode/skills
+
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/angular ~/.config/opencode/skills/
+rm -rf /tmp/UPDS
+```
+
+```bash
+# A nivel de proyecto
+mkdir -p .agent/skills
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/angular .agent/skills/
+rm -rf /tmp/UPDS
+```
+
+---
+
 ## Verificar la instalacion
 
 Una vez instalada, verifica que funcione correctamente:
@@ -253,11 +342,50 @@ clases de Tailwind documentadas, la skill esta funcionando.
 
 ---
 
+## Verificar Angular skill
+
+Una vez instalada la skill `angular`, verifica que funcione:
+
+### En Claude Code / OpenCode
+
+Escribe en el chat:
+
+```
+Crea un componente standalone de Angular 20 con signals
+```
+
+El agente deberia generar codigo que use:
+
+- `input()` y `output()` en vez de `@Input()` / `@Output()`
+- `inject()` en vez de constructor injection
+- `ChangeDetectionStrategy.OnPush`
+- Control flow moderno (`@if`, `@for` con `track`)
+- Standalone component sin NgModule
+
+### Test rapido de signals
+
+Pedi algo concreto:
+
+```
+Crea un servicio de carrito de compras con signals en Angular 20
+```
+
+Deberia generar un servicio con:
+- `private _items = signal<CartItem[]>([])`
+- `readonly items = this._items.asReadonly()`
+- `readonly total = computed(() => ...)`
+- `addItem()` / `removeItem()` que producen nuevas referencias (inmutabilidad)
+
+Si la respuesta usa signals, `inject()`, OnPush y control flow moderno, la skill
+esta funcionando correctamente.
+
+---
+
 ## Uso basico
 
 ### Frases que activan la skill automaticamente
 
-La skill se carga sola cuando decis cosas como:
+La skill `upds-style` se carga sola cuando decis cosas como:
 
 - *"Crea una interfaz con estilo UPDS"*
 - *"Aplica la linea grafica UPDS"*
@@ -265,6 +393,19 @@ La skill se carga sola cuando decis cosas como:
 - *"Usa el design system de UPDS para este formulario"*
 - *"Quiero que esta pagina siga el estilo UPDS"*
 - *"Crea un dashboard con la estetica UPDS"*
+
+### Frases que activan la skill Angular
+
+La skill `angular` se carga sola cuando decis cosas como:
+
+- *"Crea un componente standalone de Angular 20"*
+- *"Crea un servicio con signals"*
+- *"Testa este componente con Vitest"*
+- *"Configura lazy loading para estas rutas"*
+- *"Implementa un interceptor de autenticacion"*
+- *"Crea un formulario reactivo con validacion"*
+- *"Optimiza el rendimiento de este componente Angular"*
+- *"Implementa SSR con hidratacion incremental"*
 
 ### Ejemplos de uso real
 

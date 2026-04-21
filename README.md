@@ -11,6 +11,7 @@ Este repositorio contiene skills reutilizables que estandarizan la forma en que 
 | Skill | Descripcion | Stack |
 |-------|-------------|-------|
 | [`upds-style`](SKILLS/upds-style/SKILL.md) | Design system institucional UPDS. Colores, tipografia, glassmorphism, componentes Tailwind y mas. | React, Tailwind CSS v4, Vite |
+| [`angular`](SKILLS/angular/SKILL.md) | Angular 20+ best practices, arquitectura, signals, testing y flujos de desarrollo modernos. | Angular 20, TypeScript 5.8+, Vitest |
 
 ---
 
@@ -56,14 +57,33 @@ UPDS/
 ├── README.md                          # Este archivo
 ├── INSTALLATION.md                    # Guia de instalacion paso a paso
 └── SKILLS/
-    └── upds-style/                    # Skill del Design System UPDS
-        ├── SKILL.md                   # Instrucciones core del agente
-        ├── assets/
-        │   ├── design-tokens.md       # Tokens de diseno completos
-        │   └── tailwind-preset.js     # Preset Tailwind reutilizable
-        └── references/
-            ├── component-recipes.md   # Recetas de componentes UI
-            └── gradients-and-effects.md  # Efectos visuales y animaciones
+    ├── upds-style/                    # Skill del Design System UPDS
+    │   ├── SKILL.md                   # Instrucciones core del agente
+    │   ├── assets/
+    │   │   ├── design-tokens.md       # Tokens de diseno completos
+    │   │   └── tailwind-preset.js     # Preset Tailwind reutilizable
+    │   └── references/
+    │       ├── component-recipes.md   # Recetas de componentes UI
+    │       └── gradients-and-effects.md  # Efectos visuales y animaciones
+    └── angular/                       # Skill de Angular 20+
+        ├── SKILL.md                   # Patrones core + links a referencias
+        └── references/                # 16 archivos de referencia detallados
+            ├── architecture.md        # Arquitectura + Atomic Design
+            ├── components.md          # Patrones de componentes
+            ├── signals.md             # Guia completa de Signals
+            ├── state-management.md    # Manejo de estado
+            ├── dependency-injection.md# DI estilo moderno
+            ├── routing.md             # Patrones de routing modernos
+            ├── forms.md               # Formularios Signal-Era
+            ├── templates.md           # Sintaxis de templates
+            ├── http-data-layer.md     # HTTP y capa de datos
+            ├── testing.md             # Guia completa de testing
+            ├── performance.md         # Performance
+            ├── ssr-hydration.md       # SSR e Hidratacion
+            ├── security.md            # Seguridad
+            ├── accessibility.md       # Accesibilidad
+            ├── build-tooling.md       # Build y Tooling
+            └── migration.md           # Notas de migracion
 ```
 
 ---
