@@ -12,6 +12,7 @@ Este repositorio contiene skills reutilizables que estandarizan la forma en que 
 |-------|-------------|-------|
 | [`upds-style`](SKILLS/upds-style/SKILL.md) | Design system institucional UPDS. Colores, tipografia, glassmorphism, componentes Tailwind y mas. | React, Tailwind CSS v4, Vite |
 | [`angular`](SKILLS/angular/SKILL.md) | Angular 20+ best practices, arquitectura, signals, testing y flujos de desarrollo modernos. | Angular 20, TypeScript 5.8+, Vitest |
+| [`clean-architecture`](SKILLS/clean-architecture/SKILL.md) | Clean Architecture stack-agnostic para backend y frontend: use cases, ports/adapters, boundaries, review y migracion. | Backend, Frontend, Full-stack |
 
 ---
 
@@ -47,6 +48,8 @@ Una vez instalada, la skill se activa automaticamente cuando le pidas al agente 
 - *"Aplica la linea grafica de UPDS a este proyecto"*
 - *"Disena una landing page UPDS"*
 - *"Usa el design system de UPDS"*
+- *"Revisa esta app con Clean Architecture"*
+- *"Migra este componente gordo a use cases y adapters"*
 
 ---
 
@@ -65,25 +68,38 @@ UPDS/
     │   └── references/
     │       ├── component-recipes.md   # Recetas de componentes UI
     │       └── gradients-and-effects.md  # Efectos visuales y animaciones
-    └── angular/                       # Skill de Angular 20+
-        ├── SKILL.md                   # Patrones core + links a referencias
-        └── references/                # 16 archivos de referencia detallados
-            ├── architecture.md        # Arquitectura + Atomic Design
-            ├── components.md          # Patrones de componentes
-            ├── signals.md             # Guia completa de Signals
-            ├── state-management.md    # Manejo de estado
-            ├── dependency-injection.md# DI estilo moderno
-            ├── routing.md             # Patrones de routing modernos
-            ├── forms.md               # Formularios Signal-Era
-            ├── templates.md           # Sintaxis de templates
-            ├── http-data-layer.md     # HTTP y capa de datos
-            ├── testing.md             # Guia completa de testing
-            ├── performance.md         # Performance
-            ├── ssr-hydration.md       # SSR e Hidratacion
-            ├── security.md            # Seguridad
-            ├── accessibility.md       # Accesibilidad
-            ├── build-tooling.md       # Build y Tooling
-            └── migration.md           # Notas de migracion
+    ├── angular/                       # Skill de Angular 20+
+    │   ├── SKILL.md                   # Patrones core + links a referencias
+    │   └── references/                # 16 archivos de referencia detallados
+    │       ├── architecture.md        # Arquitectura + Atomic Design
+    │       ├── components.md          # Patrones de componentes
+    │       ├── signals.md             # Guia completa de Signals
+    │       ├── state-management.md    # Manejo de estado
+    │       ├── dependency-injection.md# DI estilo moderno
+    │       ├── routing.md             # Patrones de routing modernos
+    │       ├── forms.md               # Formularios Signal-Era
+    │       ├── templates.md           # Sintaxis de templates
+    │       ├── http-data-layer.md     # HTTP y capa de datos
+    │       ├── testing.md             # Guia completa de testing
+    │       ├── performance.md         # Performance
+    │       ├── ssr-hydration.md       # SSR e Hidratacion
+    │       ├── security.md            # Seguridad
+    │       ├── accessibility.md       # Accesibilidad
+    │       ├── build-tooling.md       # Build y Tooling
+    │       └── migration.md           # Notas de migracion
+    └── clean-architecture/            # Skill Clean Architecture stack-agnostic
+        ├── SKILL.md                   # Reglas core + links a referencias
+        └── references/                # Guias, ejemplos, templates y checklist
+            ├── backend-frontend-rules.md
+            ├── review-checklist.md
+            ├── complexity-scale.md
+            ├── naming-and-antipatterns.md
+            ├── backend-example.md
+            ├── frontend-example.md
+            ├── abstract-templates.md
+            ├── migration-guide.md
+            ├── review-mode.md
+            └── review-synthesis.md
 ```
 
 ---

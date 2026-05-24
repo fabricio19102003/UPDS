@@ -11,8 +11,10 @@ de trabajo. Hay **tres metodos** segun la herramienta que uses.
 - [Metodo 2: Claude Code (terminal)](#metodo-2-claude-code-terminal)
 - [Metodo 3: OpenCode y otros agentes](#metodo-3-opencode-y-otros-agentes)
 - [Instalar la skill Angular](#instalar-la-skill-angular)
+- [Instalar la skill Clean Architecture](#instalar-la-skill-clean-architecture)
 - [Verificar la instalacion](#verificar-la-instalacion)
 - [Verificar Angular skill](#verificar-angular-skill)
+- [Verificar Clean Architecture skill](#verificar-clean-architecture-skill)
 - [Uso basico](#uso-basico)
 - [Preguntas frecuentes](#preguntas-frecuentes)
 
@@ -287,6 +289,55 @@ rm -rf /tmp/UPDS
 
 ---
 
+## Instalar la skill Clean Architecture
+
+La skill `clean-architecture` se instala igual que las demas; solo cambia el
+nombre de la carpeta. Es stack-agnostic y sirve para backend, frontend y
+full-stack.
+
+### Claude.ai (web) — Clean Architecture
+
+1. Segui los mismos pasos del Metodo 1.
+2. Al comprimir, usa la carpeta `SKILLS/clean-architecture/`.
+
+La estructura del ZIP debe ser:
+
+```
+clean-architecture.zip
+├── SKILL.md
+└── references/
+    ├── backend-frontend-rules.md
+    ├── review-checklist.md
+    ├── complexity-scale.md
+    ├── naming-and-antipatterns.md
+    ├── backend-example.md
+    ├── frontend-example.md
+    ├── abstract-templates.md
+    ├── migration-guide.md
+    ├── review-mode.md
+    └── review-synthesis.md
+```
+
+### Claude Code / OpenCode — Clean Architecture
+
+```bash
+# Claude Code a nivel de proyecto
+mkdir -p .claude/skills
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/clean-architecture .claude/skills/
+rm -rf /tmp/UPDS
+```
+
+```bash
+# OpenCode global
+mkdir -p ~/.config/opencode/skills
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/clean-architecture ~/.config/opencode/skills/
+rm -rf /tmp/UPDS
+```
+
+---
+
 ## Verificar la instalacion
 
 Una vez instalada, verifica que funcione correctamente:
@@ -381,6 +432,23 @@ esta funcionando correctamente.
 
 ---
 
+## Verificar Clean Architecture skill
+
+Una vez instalada la skill `clean-architecture`, verifica que funcione:
+
+```
+Revisa este modulo con Clean Architecture y reporta violaciones Critical, Warning, Suggestion y Good Practice
+```
+
+El agente deberia hablar de:
+
+- direccion de dependencias, no solo carpetas;
+- Domain, Application/Use Cases, Infrastructure/Adapters y Delivery;
+- ports/adapters, DTO mapping y tests por boundary;
+- riesgos de sobreingenieria.
+
+---
+
 ## Uso basico
 
 ### Frases que activan la skill automaticamente
@@ -406,6 +474,17 @@ La skill `angular` se carga sola cuando decis cosas como:
 - *"Crea un formulario reactivo con validacion"*
 - *"Optimiza el rendimiento de este componente Angular"*
 - *"Implementa SSR con hidratacion incremental"*
+
+### Frases que activan la skill Clean Architecture
+
+La skill `clean-architecture` se carga sola cuando decis cosas como:
+
+- *"Revisa este repo con Clean Architecture"*
+- *"Aplica arquitectura hexagonal a este caso de uso"*
+- *"Extrae este controller gordo a use case y adapters"*
+- *"Migra este componente frontend para que no llame Axios directo"*
+- *"Crea ports, adapters y mappers sin atarte a un stack"*
+- *"Audita la direccion de dependencias de esta app"*
 
 ### Ejemplos de uso real
 
