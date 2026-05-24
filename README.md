@@ -13,6 +13,7 @@ Este repositorio contiene skills reutilizables que estandarizan la forma en que 
 | [`upds-style`](SKILLS/upds-style/SKILL.md) | Design system institucional UPDS. Colores, tipografia, glassmorphism, componentes Tailwind y mas. | React, Tailwind CSS v4, Vite |
 | [`angular`](SKILLS/angular/SKILL.md) | Angular 20+ best practices, arquitectura, signals, testing y flujos de desarrollo modernos. | Angular 20, TypeScript 5.8+, Vitest |
 | [`clean-architecture`](SKILLS/clean-architecture/SKILL.md) | Clean Architecture stack-agnostic para backend y frontend: use cases, ports/adapters, boundaries, review y migracion. | Backend, Frontend, Full-stack |
+| [`ui-ux-design`](SKILLS/ui-ux-design/SKILL.md) | UI/UX y frontend design para crear interfaces usables, distintivas, accesibles y no genericas. | Frontend, UI/UX, Design Systems |
 
 ---
 
@@ -50,6 +51,8 @@ Una vez instalada, la skill se activa automaticamente cuando le pidas al agente 
 - *"Usa el design system de UPDS"*
 - *"Revisa esta app con Clean Architecture"*
 - *"Migra este componente gordo a use cases y adapters"*
+- *"Mejora el UI/UX de este dashboard"*
+- *"Disena un componente accesible y responsive"*
 
 ---
 
@@ -87,19 +90,30 @@ UPDS/
     │       ├── accessibility.md       # Accesibilidad
     │       ├── build-tooling.md       # Build y Tooling
     │       └── migration.md           # Notas de migracion
-    └── clean-architecture/            # Skill Clean Architecture stack-agnostic
+    ├── clean-architecture/            # Skill Clean Architecture stack-agnostic
+    │   ├── SKILL.md                   # Reglas core + links a referencias
+    │   └── references/                # Guias, ejemplos, templates y checklist
+    │       ├── backend-frontend-rules.md
+    │       ├── review-checklist.md
+    │       ├── complexity-scale.md
+    │       ├── naming-and-antipatterns.md
+    │       ├── backend-example.md
+    │       ├── frontend-example.md
+    │       ├── abstract-templates.md
+    │       ├── migration-guide.md
+    │       ├── review-mode.md
+    │       └── review-synthesis.md
+    └── ui-ux-design/                  # Skill UI/UX + frontend design
         ├── SKILL.md                   # Reglas core + links a referencias
-        └── references/                # Guias, ejemplos, templates y checklist
-            ├── backend-frontend-rules.md
+        └── references/                # Heuristicas, QA, playbooks y research
+            ├── design-heuristics.md
+            ├── anti-generic-patterns.md
             ├── review-checklist.md
-            ├── complexity-scale.md
-            ├── naming-and-antipatterns.md
-            ├── backend-example.md
-            ├── frontend-example.md
-            ├── abstract-templates.md
-            ├── migration-guide.md
-            ├── review-mode.md
-            └── review-synthesis.md
+            ├── context-playbooks.md
+            ├── design-system-rules.md
+            ├── accessibility-and-qa.md
+            ├── visual-craft.md
+            └── research-sources.md
 ```
 
 ---

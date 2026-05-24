@@ -12,9 +12,11 @@ de trabajo. Hay **tres metodos** segun la herramienta que uses.
 - [Metodo 3: OpenCode y otros agentes](#metodo-3-opencode-y-otros-agentes)
 - [Instalar la skill Angular](#instalar-la-skill-angular)
 - [Instalar la skill Clean Architecture](#instalar-la-skill-clean-architecture)
+- [Instalar la skill UI/UX Design](#instalar-la-skill-uiux-design)
 - [Verificar la instalacion](#verificar-la-instalacion)
 - [Verificar Angular skill](#verificar-angular-skill)
 - [Verificar Clean Architecture skill](#verificar-clean-architecture-skill)
+- [Verificar UI/UX Design skill](#verificar-uiux-design-skill)
 - [Uso basico](#uso-basico)
 - [Preguntas frecuentes](#preguntas-frecuentes)
 
@@ -338,6 +340,61 @@ rm -rf /tmp/UPDS
 
 ---
 
+## Instalar la skill UI/UX Design
+
+La skill `ui-ux-design` se instala igual que las demas. Sirve para UI/UX,
+frontend design, landing pages, dashboards, formularios, componentes y revision
+visual/accesible.
+
+### Claude.ai (web) — UI/UX Design
+
+1. Segui los mismos pasos del Metodo 1.
+2. Al comprimir, usa la carpeta `SKILLS/ui-ux-design/`.
+
+La estructura del ZIP debe ser:
+
+```
+ui-ux-design.zip
+├── SKILL.md
+└── references/
+    ├── design-heuristics.md
+    ├── anti-generic-patterns.md
+    ├── review-checklist.md
+    ├── context-playbooks.md
+    ├── design-system-rules.md
+    ├── accessibility-and-qa.md
+    ├── visual-craft.md
+    └── research-sources.md
+```
+
+### Claude Code / OpenCode — UI/UX Design
+
+```bash
+# Claude Code a nivel de proyecto
+mkdir -p .claude/skills
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/ui-ux-design .claude/skills/
+rm -rf /tmp/UPDS
+```
+
+```bash
+# OpenCode global
+mkdir -p ~/.config/opencode/skills
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/ui-ux-design ~/.config/opencode/skills/
+rm -rf /tmp/UPDS
+```
+
+```bash
+# OpenCode a nivel de proyecto
+mkdir -p .agent/skills
+git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
+cp -r /tmp/UPDS/SKILLS/ui-ux-design .agent/skills/
+rm -rf /tmp/UPDS
+```
+
+---
+
 ## Verificar la instalacion
 
 Una vez instalada, verifica que funcione correctamente:
@@ -449,6 +506,23 @@ El agente deberia hablar de:
 
 ---
 
+## Verificar UI/UX Design skill
+
+Una vez instalada la skill `ui-ux-design`, verifica que funcione:
+
+```
+Mejora el UI/UX de este formulario y revisa accesibilidad, responsive, estados y riesgo de UI generica
+```
+
+El agente deberia hablar de:
+
+- direccion visual y razonamiento;
+- jerarquia, spacing, tipografia, color y estados;
+- accesibilidad: foco, teclado, contraste, errores y reduced motion;
+- respeto por design systems existentes.
+
+---
+
 ## Uso basico
 
 ### Frases que activan la skill automaticamente
@@ -485,6 +559,17 @@ La skill `clean-architecture` se carga sola cuando decis cosas como:
 - *"Migra este componente frontend para que no llame Axios directo"*
 - *"Crea ports, adapters y mappers sin atarte a un stack"*
 - *"Audita la direccion de dependencias de esta app"*
+
+### Frases que activan la skill UI/UX Design
+
+La skill `ui-ux-design` se carga sola cuando decis cosas como:
+
+- *"Mejora el UI/UX de este dashboard"*
+- *"Disena una landing page distintiva y accesible"*
+- *"Revisa este componente para que no se vea generico"*
+- *"Crea un formulario con buenos estados de error y foco"*
+- *"Audita accesibilidad, responsive y reduced motion"*
+- *"Dale mejor frontend design a esta pantalla sin romper el design system"*
 
 ### Ejemplos de uso real
 
@@ -536,7 +621,8 @@ Si instalaste la skill copiando archivos, para actualizar:
 git clone https://github.com/fabricio19102003/UPDS.git /tmp/UPDS
 
 # Copiar encima de la skill existente
-cp -r /tmp/UPDS/SKILLS/upds-style/* <ruta-a-tu-skill>/upds-style/
+# Reemplaza <skill-name> por upds-style, angular, clean-architecture o ui-ux-design
+cp -r /tmp/UPDS/SKILLS/<skill-name>/* <ruta-a-tu-skill>/<skill-name>/
 
 # Limpiar
 rm -rf /tmp/UPDS
@@ -566,7 +652,7 @@ mencionala directamente: *"Usa la skill upds-style para esto."*
 **Causa probable**: La estructura del ZIP no es correcta.
 
 **Solucion**: Asegurate de que:
-- El ZIP contiene la carpeta `upds-style/` como raiz
+- El ZIP contiene la carpeta de la skill elegida como raiz, por ejemplo `upds-style/` o `ui-ux-design/`
 - Dentro hay un archivo llamado exactamente `SKILL.md` (case-sensitive)
 - No hay archivos extra como `.DS_Store` o `Thumbs.db`
 
