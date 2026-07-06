@@ -1,0 +1,20 @@
+title: "New Document"
+subtitle: "Optional subtitle"
+author: "Author Name"
+organization: "Organization"
+date: "\\today"
+profile: "report"
+engine: "auto"
+outputs:
+  pdf: true
+  preview_png: true
+  pdfa: false
+paths:
+  main: "main.tex"
+  content: "content"
+  figures: "figures"
+  data: "data"
+  outputs: "outputs"
+metadata:
+  language: "en"
+  keywords: []

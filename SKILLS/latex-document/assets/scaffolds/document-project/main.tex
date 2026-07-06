@@ -1,0 +1,39 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+\geometry{margin=1in}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue,
+  pdftitle={New Document},
+  pdfauthor={Author Name}
+}
+
+\title{New Document\\\large Optional subtitle}
+\author{Author Name\\Organization}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\input{content/01-introduction}
+\input{content/02-body}
+\input{content/03-conclusion}
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\end{document}
