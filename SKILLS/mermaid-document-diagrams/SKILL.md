@@ -1,6 +1,6 @@
 ---
 name: mermaid-document-diagrams
-description: "Trigger: Mermaid diagrams, export diagram as SVG or PNG, architecture diagram, flowchart, sequence diagram, state machine, ER diagram, diagrams for docs. Generate validated Mermaid source and render document-ready SVG/PNG assets with local mmdc or Kroki fallback."
+description: "Trigger: Mermaid diagrams, export diagram as SVG or PNG, architecture diagram, flowchart, sequence diagram, state machine, ER diagram, Gantt, mindmap, C4, journey, diagrams for docs. Generate validated Mermaid source and render document-ready SVG/PNG assets with local mmdc or Kroki fallback."
 license: Apache-2.0
 metadata:
   author: gentleman-programming
@@ -20,7 +20,7 @@ Do not use it for pixel-perfect drawings, freehand sketches, branded icon-heavy 
 - Prefer `scripts/render.mjs` so backend fallback, HTTP failure checks, and output checks stay consistent.
 - Prefer local `mmdc`; use Kroki only with explicit remote-export approval and no sensitive diagram data.
 - Produce SVG by default for docs and PNG for previews, PDFs, slides, email, or tools that cannot embed SVG.
-- Optimize for readable documents: short labels, explicit participants, high contrast, subgraphs for dense systems.
+- Optimize for readable documents: short labels, explicit participants, high contrast, useful alt text, and subgraphs for dense systems.
 
 ## Decision Gates
 
@@ -32,15 +32,21 @@ Do not use it for pixel-perfect drawings, freehand sketches, branded icon-heavy 
 | API/message flow | Use `sequenceDiagram` with declared participants |
 | Database/domain model | Use `erDiagram` or `classDiagram` |
 | State/lifecycle | Use `stateDiagram-v2` |
+| Timeline/project plan | Use `gantt` |
+| Concept map/brainstorm | Use `mindmap` |
+| User experience flow | Use `journey` |
+| High-level system context | Use `C4Context` after backend compatibility is confirmed |
 | Multiple `.mmd` files | Use `scripts/batch.mjs` and report failures per file |
-| Sensitive/private diagram and `mmdc` fails | Do not use Kroki; report the local setup blocker |
+| Sensitive/private diagram and `mmdc` fails | Do not use Kroki; report setup blocker |
 | Render is cramped or clipped | Change direction, split into subgraphs, shorten labels, re-export |
 
 ## Execution Steps
 
-1. Ask only for missing choices that affect output: target document, format, output directory, theme, or whether remote Kroki is allowed.
+1. Ask only for missing choices that affect output: target document, format,
+   output directory, theme, or whether remote Kroki is allowed.
 2. Create a stable basename such as `docs/diagrams/auth-flow.mmd`.
-3. Draft from `assets/templates/`, `assets/themes/document-themes.md`, and the references below.
+3. Draft from `assets/templates/`, `assets/gallery/`,
+   `assets/themes/document-themes.md`, and the references below.
 4. Render one diagram with validation and local backend selection. Set
    `SKILL_DIR` to the installed skill path:
 
@@ -83,7 +89,8 @@ Return:
 
 - `.mmd` path and generated SVG/PNG paths.
 - Validation/export backend used: `mmdc` or `Kroki`.
-- Embed snippet, e.g. Markdown `![Alt text](path/to/diagram.svg)`.
+- Accessible embed snippet, e.g. Markdown
+  `![Authentication flow from request to token](path/to/diagram.svg)`.
 - Any skipped format, environment issue, remote-export decision, sensitive-data
   constraint, or remaining readability risk.
 - Whether user feedback is needed for another review loop.
@@ -94,10 +101,13 @@ Return:
 - `scripts/batch.mjs` — render a directory of `.mmd` files.
 - `scripts/watch.mjs` — re-render diagrams during an editing session.
 - `assets/templates/` — starter Mermaid files by diagram type.
+- `assets/gallery/` — rendered example gallery with `.mmd`, SVG, and PNG.
 - `assets/themes/document-themes.md` — document theme guidance and UPDS init
   block.
 - `references/export-and-quality.md` — backend commands, document defaults, and
   readability fixes.
 - `references/error-guide.md` — common validation/rendering failures and repair
   order.
+- `references/accessibility.md` — alt text, contrast, format, and complexity
+  checklist.
 - `references/ci-integration.md` — GitHub Actions validation guidance.

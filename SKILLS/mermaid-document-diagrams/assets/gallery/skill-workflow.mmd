@@ -1,0 +1,8 @@
+%%{init: {"theme": "base", "themeVariables": {"background": "#ffffff", "fontFamily": "Inter, Arial, sans-serif", "primaryColor": "#dbeafe", "primaryBorderColor": "#1c398e", "primaryTextColor": "#0f172a", "lineColor": "#334155"}}}%%
+flowchart LR
+  Request([User asks for diagram]) --> Source[Create .mmd source]
+  Source --> Validate{Validate}
+  Validate -->|Fix needed| Source
+  Validate -->|Pass| Export[Export SVG/PNG]
+  Export --> Review[Visual QA]
+  Review --> Publish([Embed in docs])

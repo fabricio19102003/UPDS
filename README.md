@@ -123,11 +123,13 @@ UPDS/
         ├── package.json               # Scripts npm locales de la skill
         ├── scripts/                   # Render, batch y watch con mmdc/Kroki
         ├── assets/
-        │   ├── templates/             # Plantillas Mermaid base
+        │   ├── templates/             # Plantillas Mermaid base ampliadas
+        │   ├── gallery/               # Ejemplos .mmd + PNG/SVG renderizados
         │   └── themes/                # Temas documentales y estilo UPDS
-        └── references/                # Export, errores y CI
+        └── references/                # Export, errores, accesibilidad y CI
             ├── export-and-quality.md
             ├── error-guide.md
+            ├── accessibility.md
             └── ci-integration.md
 ```
 

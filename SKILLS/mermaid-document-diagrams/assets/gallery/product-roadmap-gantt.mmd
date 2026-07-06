@@ -1,0 +1,14 @@
+gantt
+  title Mermaid Skill Improvement Roadmap
+  dateFormat YYYY-MM-DD
+  axisFormat %d %b
+
+  section v2 Foundation
+    Render script      :done, render, 2026-07-01, 2d
+    Batch script       :done, batch, after render, 1d
+    Watch mode         :done, watch, after batch, 1d
+
+  section Backlog
+    Example gallery    :active, gallery, after watch, 2d
+    More templates     :templates, after gallery, 2d
+    Accessibility guide:access, after templates, 2d
