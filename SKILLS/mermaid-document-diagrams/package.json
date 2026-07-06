@@ -1,0 +1,17 @@
+{
+  "name": "mermaid-document-diagrams-skill-tools",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node scripts/render.mjs",
+    "batch": "node scripts/batch.mjs",
+    "watch": "node scripts/watch.mjs"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.16.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

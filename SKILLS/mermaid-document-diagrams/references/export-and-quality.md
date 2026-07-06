@@ -2,24 +2,24 @@
 
 ## Backend selection
 
-Prefer local `mmdc` when available because it supports SVG, PNG, PDF, local themes, and offline rendering. Confirm it can actually render; `mmdc --version` alone is not enough because Puppeteer may still be missing Chrome.
+Prefer local `mmdc` when available because it supports SVG, PNG, PDF, local themes, and offline rendering. Install it globally with `npm install -g @mermaid-js/mermaid-cli`, or run `npm install` inside the skill directory and use the package scripts. Confirm it can actually render; `mmdc --version` alone is not enough because Puppeteer may still be missing Chrome.
 
 ```bash
 mmdc --version
 mmdc -i diagram.mmd -o /tmp/mermaid-check.png -w 1600 --backgroundColor white
 ```
 
-If local rendering fails because `mmdc`, Puppeteer, or Chrome is missing, use Kroki for SVG/PNG. Always fail on HTTP errors and check the output is non-empty:
+If local rendering fails because `mmdc`, Puppeteer, or Chrome is missing, use Kroki only after explicit remote-export approval. Always fail on HTTP errors and check the output is non-empty:
 
 ```bash
-curl --fail-with-body -sS -X POST \
+curl --fail-with-body -sS --connect-timeout 10 --max-time 60 -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @diagram.mmd \
   https://kroki.io/mermaid/svg \
   -o diagram.svg
 test -s diagram.svg
 
-curl --fail-with-body -sS -X POST \
+curl --fail-with-body -sS --connect-timeout 10 --max-time 60 -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @diagram.mmd \
   https://kroki.io/mermaid/png \
