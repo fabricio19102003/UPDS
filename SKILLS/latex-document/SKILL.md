@@ -57,7 +57,9 @@ description: >
   (48) create a PDF programmatically with reportlab (Canvas, Platypus),
   (49) rotate or crop PDF pages (pypdf),
   (50) add a watermark to an existing PDF,
-  (51) extract metadata from a PDF (title, author, subject).
+  (51) extract metadata from a PDF (title, author, subject),
+  (52) package a final submission with PDF, sources, bibliography, figures,
+  data, manifest, checklist, and optional ZIP archive.
 ---
 
 # LaTeX Document Skill
@@ -114,6 +116,18 @@ bash <skill_path>/scripts/build_document_project.sh ./my-document --preview
 ```
 
 The scaffold creates `document.yaml`, `main.tex`, `content/`, `figures/`, `data/`, `outputs/`, and `build/`. Full guide: [references/project-scaffolding.md](references/project-scaffolding.md).
+
+## Workflow: Submission Packaging (Final Handoff)
+
+Use this when the user is ready to submit, archive, or hand off a report, paper, thesis, book, or client deliverable. Build first, then package.
+
+```bash
+bash <skill_path>/scripts/check_document_project.sh ./my-document
+bash <skill_path>/scripts/build_document_project.sh ./my-document --preview
+bash <skill_path>/scripts/package_submission.sh ./my-document --name final-document --archive
+```
+
+The package includes `final/`, `source/`, `figures/`, `data/`, `manifest.txt`, and `submission-checklist.md`. Full guide: [references/submission-packaging.md](references/submission-packaging.md).
 
 ## Workflow: Mail Merge (Batch Personalized Documents)
 
