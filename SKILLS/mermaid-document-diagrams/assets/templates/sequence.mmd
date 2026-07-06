@@ -1,0 +1,12 @@
+sequenceDiagram
+  participant U as User
+  participant C as Client
+  participant A as API
+  participant D as Database
+
+  U->>C: Start request
+  C->>A: Send request
+  A->>D: Read/write data
+  D-->>A: Result
+  A-->>C: Response
+  C-->>U: Show outcome

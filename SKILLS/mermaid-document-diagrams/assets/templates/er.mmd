@@ -1,0 +1,17 @@
+erDiagram
+  USER ||--o{ ORDER : places
+  ORDER ||--|{ ORDER_ITEM : contains
+  PRODUCT ||--o{ ORDER_ITEM : appears_in
+
+  USER {
+    string id
+    string email
+  }
+  ORDER {
+    string id
+    datetime created_at
+  }
+  PRODUCT {
+    string id
+    string name
+  }
