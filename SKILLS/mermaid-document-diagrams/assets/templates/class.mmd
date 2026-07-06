@@ -1,0 +1,10 @@
+classDiagram
+  class User {
+    +string id
+    +string email
+  }
+  class Account {
+    +string id
+    +string status
+  }
+  User "1" --> "0..*" Account : owns

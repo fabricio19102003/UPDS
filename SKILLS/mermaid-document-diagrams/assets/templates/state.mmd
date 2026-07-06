@@ -1,0 +1,8 @@
+stateDiagram-v2
+  [*] --> Pending : created
+  Pending --> Active : approved
+  Pending --> Cancelled : rejected
+  Active --> Completed : finished
+  Active --> Cancelled : cancelled
+  Completed --> [*]
+  Cancelled --> [*]

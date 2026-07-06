@@ -1,0 +1,6 @@
+flowchart TD
+  Start([Start]) --> Decide{Decision?}
+  Decide -->|Yes| Action[Perform action]
+  Decide -->|No| Skip[Skip action]
+  Action --> Done([Done])
+  Skip --> Done

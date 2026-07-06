@@ -1,0 +1,24 @@
+flowchart LR
+  subgraph Clients
+    Web[Web App]
+    Mobile[Mobile App]
+  end
+
+  subgraph Edge
+    Gateway[API Gateway]
+  end
+
+  subgraph Services
+    Auth[Auth Service]
+    Core[Core Service]
+  end
+
+  subgraph Data
+    DB[(Primary DB)]
+    Cache[(Cache)]
+  end
+
+  Web & Mobile --> Gateway
+  Gateway --> Auth & Core
+  Core --> DB
+  Core --> Cache

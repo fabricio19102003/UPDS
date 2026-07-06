@@ -14,6 +14,7 @@ Este repositorio contiene skills reutilizables que estandarizan la forma en que 
 | [`angular`](SKILLS/angular/SKILL.md) | Angular 20+ best practices, arquitectura, signals, testing y flujos de desarrollo modernos. | Angular 20, TypeScript 5.8+, Vitest |
 | [`clean-architecture`](SKILLS/clean-architecture/SKILL.md) | Clean Architecture stack-agnostic para backend y frontend: use cases, ports/adapters, boundaries, review y migracion. | Backend, Frontend, Full-stack |
 | [`ui-ux-design`](SKILLS/ui-ux-design/SKILL.md) | UI/UX y frontend design para crear interfaces usables, distintivas, accesibles y no genericas. | Frontend, UI/UX, Design Systems |
+| [`mermaid-document-diagrams`](SKILLS/mermaid-document-diagrams/SKILL.md) | Diagramas Mermaid para documentacion: fuente `.mmd` validada y export SVG/PNG via `mmdc` o Kroki. | Mermaid, SVG, PNG, Docs |
 
 ---
 
@@ -53,6 +54,9 @@ Una vez instalada, la skill se activa automaticamente cuando le pidas al agente 
 - *"Migra este componente gordo a use cases y adapters"*
 - *"Mejora el UI/UX de este dashboard"*
 - *"Disena un componente accesible y responsive"*
+- *"Genera un diagrama Mermaid para este flujo y exportalo como SVG"*
+- *"Crea un sequence diagram de autenticacion para mi README"*
+- *"Quiero un diagrama de arquitectura en PNG para un documento"*
 
 ---
 
@@ -103,17 +107,23 @@ UPDS/
     │       ├── migration-guide.md
     │       ├── review-mode.md
     │       └── review-synthesis.md
-    └── ui-ux-design/                  # Skill UI/UX + frontend design
-        ├── SKILL.md                   # Reglas core + links a referencias
-        └── references/                # Heuristicas, QA, playbooks y research
-            ├── design-heuristics.md
-            ├── anti-generic-patterns.md
-            ├── review-checklist.md
-            ├── context-playbooks.md
-            ├── design-system-rules.md
-            ├── accessibility-and-qa.md
-            ├── visual-craft.md
-            └── research-sources.md
+    ├── ui-ux-design/                  # Skill UI/UX + frontend design
+    │   ├── SKILL.md                   # Reglas core + links a referencias
+    │   └── references/                # Heuristicas, QA, playbooks y research
+    │       ├── design-heuristics.md
+    │       ├── anti-generic-patterns.md
+    │       ├── review-checklist.md
+    │       ├── context-playbooks.md
+    │       ├── design-system-rules.md
+    │       ├── accessibility-and-qa.md
+    │       ├── visual-craft.md
+    │       └── research-sources.md
+    └── mermaid-document-diagrams/     # Skill Mermaid para diagramas documentales
+        ├── SKILL.md                   # Workflow validacion + export SVG/PNG
+        ├── assets/
+        │   └── templates/             # Plantillas Mermaid base
+        └── references/
+            └── export-and-quality.md  # Backends, comandos y QA visual
 ```
 
 ---
