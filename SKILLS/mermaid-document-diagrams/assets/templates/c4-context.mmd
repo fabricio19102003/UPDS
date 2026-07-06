@@ -1,0 +1,13 @@
+C4Context
+  title System Context Example
+
+  Person(user, "User", "Person using the product")
+  System(app, "Application", "Provides the main workflow")
+  System_Ext(auth, "Identity Provider", "Handles authentication")
+  System_Ext(email, "Email Service", "Sends notifications")
+
+  Rel(user, app, "Uses")
+  Rel(app, auth, "Authenticates with")
+  Rel(app, email, "Sends notifications through")
+
+  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")

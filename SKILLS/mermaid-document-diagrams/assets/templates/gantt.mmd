@@ -1,0 +1,16 @@
+gantt
+  title Project delivery plan
+  dateFormat YYYY-MM-DD
+  axisFormat %d %b
+
+  section Discovery
+    Requirements review :done, req, 2026-01-01, 3d
+    Diagram scope       :active, scope, after req, 2d
+
+  section Build
+    Draft Mermaid source :draft, after scope, 3d
+    Validate and export  :export, after draft, 2d
+
+  section Review
+    Visual QA            :qa, after export, 2d
+    Publish assets       :publish, after qa, 1d

@@ -1,0 +1,15 @@
+C4Context
+  title Academic Portal Context
+
+  Person(student, "Student", "Uses services and checks status")
+  Person(staff, "Staff", "Reviews and resolves requests")
+  System(portal, "Academic Portal", "Central UPDS service portal")
+  System_Ext(identity, "Identity Provider", "Authenticates users")
+  System_Ext(notifications, "Notification Service", "Sends email updates")
+
+  Rel(student, portal, "Submits requests")
+  Rel(staff, portal, "Manages requests")
+  Rel(portal, identity, "Authenticates with")
+  Rel(portal, notifications, "Sends updates through")
+
+  UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")

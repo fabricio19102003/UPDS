@@ -120,10 +120,17 @@ UPDS/
     │       └── research-sources.md
     └── mermaid-document-diagrams/     # Skill Mermaid para diagramas documentales
         ├── SKILL.md                   # Workflow validacion + export SVG/PNG
+        ├── package.json               # Scripts npm locales de la skill
+        ├── scripts/                   # Render, batch y watch con mmdc/Kroki
         ├── assets/
-        │   └── templates/             # Plantillas Mermaid base
-        └── references/
-            └── export-and-quality.md  # Backends, comandos y QA visual
+        │   ├── templates/             # Plantillas Mermaid base ampliadas
+        │   ├── gallery/               # Ejemplos .mmd + PNG/SVG renderizados
+        │   └── themes/                # Temas documentales y estilo UPDS
+        └── references/                # Export, errores, accesibilidad y CI
+            ├── export-and-quality.md
+            ├── error-guide.md
+            ├── accessibility.md
+            └── ci-integration.md
 ```
 
 ---
