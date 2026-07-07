@@ -25,6 +25,14 @@ Build PDF and PNG previews:
 bash <skill_path>/scripts/build_document_project.sh ./my-report --preview
 ```
 
+Build with Tectonic only for simple scaffold variants that do not require bibliography, index, or glossary passes:
+
+```bash
+bash <skill_path>/scripts/build_document_project.sh ./my-report --use-tectonic
+```
+
+The default scaffold includes `\bibliography{bibliography}`, so use the default backend or `--use-latexmk` unless that bibliography dependency is removed.
+
 ## Generated layout
 
 ```text

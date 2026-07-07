@@ -445,7 +445,22 @@ test_bibliography_detection() {
   result=$(detect_bibliography)
   assert_equals "biber" "$result" "\\addbibresource should trigger biber"
 
-  # Test 4: Both present - which wins? (bibtex checked first)
+  # Test 4: biber with optional arguments
+  test_file="${TEST_TEMP_DIR}/biber_optional.tex"
+  cat > "$test_file" <<'EOF'
+\documentclass{article}
+\usepackage{biblatex}
+\addbibresource[location=local]{refs.bib}
+\begin{document}
+Hello
+\printbibliography
+\end{document}
+EOF
+  INPUT_TEX="$test_file"
+  result=$(detect_bibliography)
+  assert_equals "biber" "$result" "\\addbibresource with optional arguments should trigger biber"
+
+  # Test 5: Both present - which wins? (bibtex checked first)
   test_file="${TEST_TEMP_DIR}/both_bib.tex"
   create_both_bib_tex "$test_file"
   INPUT_TEX="$test_file"
@@ -742,6 +757,222 @@ test_edge_case_multiple_engines() {
   assert_equals "pdflatex" "$result" "Manual override should work even with conflicting packages"
 }
 
+test_tectonic_option_validation() {
+  echo -e "\n${BLUE}=== Tectonic Backend Option Validation ===${NC}"
+
+  local test_file="${TEST_TEMP_DIR}/tectonic_option.tex"
+  create_minimal_tex "$test_file"
+
+  if bash "$COMPILE_SCRIPT" "$test_file" --use-latexmk --use-tectonic 2>"${TEST_TEMP_DIR}/tectonic_conflict.err"; then
+    echo -e "${RED}✗ FAIL${NC}: latexmk and Tectonic flags should conflict"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${TEST_TEMP_DIR}/tectonic_conflict.err" "mutually exclusive" "latexmk and Tectonic flags should be mutually exclusive"
+  fi
+
+  if bash "$COMPILE_SCRIPT" "$test_file" --use-tectonic --engine lualatex 2>"${TEST_TEMP_DIR}/tectonic_engine.err"; then
+    echo -e "${RED}✗ FAIL${NC}: Tectonic should reject explicit engine override"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${TEST_TEMP_DIR}/tectonic_engine.err" "engine is not supported" "Tectonic should reject explicit engine override"
+  fi
+
+  if TECTONIC_BIN="${TEST_TEMP_DIR}/missing-tectonic" bash "$COMPILE_SCRIPT" "$test_file" --use-tectonic 2>"${TEST_TEMP_DIR}/tectonic_missing.err"; then
+    echo -e "${RED}✗ FAIL${NC}: missing Tectonic should fail clearly"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${TEST_TEMP_DIR}/tectonic_missing.err" "tectonic not found" "missing Tectonic should produce actionable error"
+  fi
+
+  local fake_bin="${TEST_TEMP_DIR}/fake-bin"
+  mkdir -p "$fake_bin"
+  cat > "$fake_bin/tectonic" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+  chmod +x "$fake_bin/tectonic"
+
+  local bib_file="${TEST_TEMP_DIR}/tectonic_bib.tex"
+  create_bibtex_tex "$bib_file"
+  if PATH="$fake_bin:$PATH" bash "$COMPILE_SCRIPT" "$bib_file" --use-tectonic 2>"${TEST_TEMP_DIR}/tectonic_aux.err"; then
+    echo -e "${RED}✗ FAIL${NC}: Tectonic should refuse auxiliary-pass documents"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${TEST_TEMP_DIR}/tectonic_aux.err" "does not run this wrapper's bibliography" "Tectonic should refuse bibliography auxiliary passes"
+  fi
+
+  local multi_main="${TEST_TEMP_DIR}/tectonic_multi_main.tex"
+  mkdir -p "${TEST_TEMP_DIR}/content"
+  cat > "$multi_main" <<'EOF'
+\documentclass{article}
+\begin{document}
+\input{content/refs}
+\end{document}
+EOF
+  cat > "${TEST_TEMP_DIR}/content/refs.tex" <<'EOF'
+\bibliography{references}
+EOF
+  if PATH="$fake_bin:$PATH" bash "$COMPILE_SCRIPT" "$multi_main" --use-tectonic 2>"${TEST_TEMP_DIR}/tectonic_aux_nested.err"; then
+    echo -e "${RED}✗ FAIL${NC}: Tectonic should refuse auxiliary commands in included files"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${TEST_TEMP_DIR}/tectonic_aux_nested.err" "does not run this wrapper's bibliography" "Tectonic should refuse auxiliary commands in included files"
+  fi
+
+  local aux_patterns_dir="${TEST_TEMP_DIR}/tectonic-aux-patterns"
+  mkdir -p "$aux_patterns_dir"
+  local aux_patterns_main="${aux_patterns_dir}/main.tex"
+  cat > "$aux_patterns_main" <<'EOF'
+\documentclass{article}
+\begin{document}
+\input{biber}
+\input{glossary}
+\end{document}
+EOF
+  cat > "${aux_patterns_dir}/biber.tex" <<'EOF'
+\addbibresource[location=local]{refs.bib}
+\printbibliography
+EOF
+  cat > "${aux_patterns_dir}/glossary.tex" <<'EOF'
+\makeglossaries
+\newacronym{ai}{AI}{Artificial Intelligence}
+\printglossaries
+EOF
+  if PATH="$fake_bin:$PATH" bash "$COMPILE_SCRIPT" "$aux_patterns_main" --use-tectonic 2>"${TEST_TEMP_DIR}/tectonic_aux_patterns.err"; then
+    echo -e "${RED}✗ FAIL${NC}: Tectonic should refuse biber/glossary auxiliary patterns"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${TEST_TEMP_DIR}/tectonic_aux_patterns.err" "does not run this wrapper's bibliography" "Tectonic should refuse biber/glossary auxiliary patterns"
+  fi
+
+  local unrelated_dir="${TEST_TEMP_DIR}/tectonic-unrelated"
+  mkdir -p "$unrelated_dir"
+  local unrelated_main="${unrelated_dir}/main.tex"
+  create_minimal_tex "$unrelated_main"
+  cat > "${unrelated_dir}/unrelated.tex" <<'EOF'
+\bibliography{other}
+EOF
+  cat > "$fake_bin/tectonic" <<'EOF'
+#!/usr/bin/env bash
+texfile="$1"
+pdf="${texfile%.tex}.pdf"
+printf '%s\n' '%PDF- fake pdf' > "$pdf"
+exit 0
+EOF
+  chmod +x "$fake_bin/tectonic"
+  if PATH="$fake_bin:$PATH" bash "$COMPILE_SCRIPT" "$unrelated_main" --use-tectonic 2>"${TEST_TEMP_DIR}/tectonic_unrelated.err"; then
+    assert_file_exists "${unrelated_dir}/main.pdf" "Tectonic should ignore auxiliary commands in unrelated .tex files"
+  else
+    echo -e "${RED}✗ FAIL${NC}: unrelated auxiliary .tex should not block Tectonic"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  fi
+
+  cat > "$fake_bin/tectonic" <<'EOF'
+#!/usr/bin/env bash
+texfile="$1"
+pdf="${texfile%.tex}.pdf"
+printf 'partial pdf\n' > "$pdf"
+exit 1
+EOF
+  chmod +x "$fake_bin/tectonic"
+  local partial_dir="${TEST_TEMP_DIR}/partial-tectonic"
+  mkdir -p "$partial_dir"
+  local partial_tex="${partial_dir}/tectonic_partial.tex"
+  create_minimal_tex "$partial_tex"
+  if PATH="$fake_bin:$PATH" bash "$COMPILE_SCRIPT" "$partial_tex" --use-tectonic 2>"${TEST_TEMP_DIR}/tectonic_partial.err"; then
+    echo -e "${RED}✗ FAIL${NC}: failed Tectonic should not leave partial PDF as success"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${TEST_TEMP_DIR}/tectonic_partial.err" "no valid fresh PDF produced" "failed Tectonic should report no valid fresh PDF when partial exists"
+    assert_true "[[ ! -f '${partial_dir}/tectonic_partial.pdf' ]]" "failed Tectonic should remove partial PDF when no backup exists"
+  fi
+
+  cat > "$fake_bin/tectonic" <<'EOF'
+#!/usr/bin/env bash
+exit 1
+EOF
+  chmod +x "$fake_bin/tectonic"
+  local stale_dir="${TEST_TEMP_DIR}/stale-tectonic"
+  mkdir -p "$stale_dir"
+  local stale_tex="${stale_dir}/tectonic_option.tex"
+  create_minimal_tex "$stale_tex"
+  local stale_file="${stale_dir}/tectonic_option.pdf"
+  printf 'stale pdf\n' > "$stale_file"
+  if PATH="$fake_bin:$PATH" bash "$COMPILE_SCRIPT" "$stale_tex" --use-tectonic 2>"${TEST_TEMP_DIR}/tectonic_stale.err"; then
+    echo -e "${RED}✗ FAIL${NC}: failed Tectonic should not succeed with stale PDF"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${TEST_TEMP_DIR}/tectonic_stale.err" "no valid fresh PDF produced" "failed Tectonic should reject stale PDF"
+    assert_file_contains "$stale_file" "stale pdf" "failed Tectonic should restore prior PDF"
+  fi
+}
+
+test_stale_pdf_and_biber_integration() {
+  echo -e "\n${BLUE}=== Stale PDF Guard and Biber Integration ===${NC}"
+
+  local fake_bin="${TEST_TEMP_DIR}/fake-default-bin"
+  mkdir -p "$fake_bin"
+
+  local stale_dir="${TEST_TEMP_DIR}/default-stale"
+  mkdir -p "$stale_dir"
+  local stale_tex="${stale_dir}/doc.tex"
+  create_minimal_tex "$stale_tex"
+  printf 'old pdf\n' > "${stale_dir}/doc.pdf"
+
+  cat > "$fake_bin/pdflatex" <<'EOF'
+#!/usr/bin/env bash
+exit 1
+EOF
+  chmod +x "$fake_bin/pdflatex"
+
+  if PATH="$fake_bin:$PATH" bash "$COMPILE_SCRIPT" "$stale_tex" 2>"${TEST_TEMP_DIR}/default_stale.err"; then
+    echo -e "${RED}✗ FAIL${NC}: failed default compile should not succeed with stale PDF"
+    TESTS_RUN=$((TESTS_RUN + 1))
+    TESTS_FAILED=$((TESTS_FAILED + 1))
+  else
+    assert_file_contains "${stale_dir}/doc.pdf" "old pdf" "failed default compile should restore prior PDF"
+  fi
+
+  local biber_dir="${TEST_TEMP_DIR}/default-biber"
+  mkdir -p "$biber_dir"
+  local biber_tex="${biber_dir}/paper.tex"
+  cat > "$biber_tex" <<'EOF'
+\documentclass{article}
+\usepackage{biblatex}
+\addbibresource[location=local]{refs.bib}
+\begin{document}
+Hello
+\printbibliography
+\end{document}
+EOF
+  cat > "$fake_bin/pdflatex" <<'EOF'
+#!/usr/bin/env bash
+texfile="${@: -1}"
+pdf="${texfile%.tex}.pdf"
+printf '%s\n' '%PDF- fake pdf' > "$pdf"
+exit 0
+EOF
+  cat > "$fake_bin/biber" <<'EOF'
+#!/usr/bin/env bash
+printf 'biber called\n' > biber-called.marker
+exit 0
+EOF
+  chmod +x "$fake_bin/pdflatex" "$fake_bin/biber"
+
+  PATH="$fake_bin:$PATH" bash "$COMPILE_SCRIPT" "$biber_tex" --quiet
+  assert_file_exists "${biber_dir}/paper.pdf" "default compile should create PDF with fake pdflatex"
+  assert_file_contains "${biber_dir}/biber-called.marker" "biber called" "default compile should invoke biber for optional addbibresource"
+}
+
 test_edge_case_nested_floats() {
   echo -e "\n${BLUE}=== Edge Case: Complex Float Patterns ===${NC}"
 
@@ -832,6 +1063,8 @@ main() {
   test_error_no_document_env
   test_edge_case_empty_file
   test_edge_case_multiple_engines
+  test_tectonic_option_validation
+  test_stale_pdf_and_biber_integration
   test_edge_case_nested_floats
 
   cleanup_test_env

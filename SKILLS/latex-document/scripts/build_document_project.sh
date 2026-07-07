@@ -16,6 +16,7 @@ Options:
   --engine ENGINE       Force pdflatex, xelatex, or lualatex
   --scale PIXELS        Max dimension for PNG previews
   --use-latexmk         Use latexmk backend
+  --use-tectonic        Use Tectonic backend (simple documents; no auxiliary passes)
   --pdfa                Produce PDF/A output
   --auto-fix            Use compile_latex.sh auto-fix mode
   --quiet               Suppress non-error output
@@ -38,7 +39,7 @@ while [[ $# -gt 0 ]]; do
     --preview) PREVIEW=true; shift ;;
     --preview-dir) PREVIEW_DIR="$2"; shift 2 ;;
     --engine|--scale) PASSTHROUGH+=("$1" "$2"); shift 2 ;;
-    --use-latexmk|--pdfa|--auto-fix|--quiet|--verbose) PASSTHROUGH+=("$1"); shift ;;
+    --use-latexmk|--use-tectonic|--pdfa|--auto-fix|--quiet|--verbose) PASSTHROUGH+=("$1"); shift ;;
     -h|--help) usage; exit 0 ;;
     -*) echo "Error: Unknown option $1" >&2; exit 1 ;;
     *) PROJECT_DIR="$1"; shift ;;

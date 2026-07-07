@@ -11,6 +11,7 @@
 #   --engine          LaTeX engine: pdflatex (default), xelatex, or lualatex
 #   --auto-fix        Apply automatic fixes (naked floats, microtype) to temp copy before compiling
 #   --use-latexmk     Use latexmk for compilation (automatic multi-pass, dependency tracking)
+#   --use-tectonic    Use Tectonic backend for reproducible bundle-based compilation
 #   --verbose         Show full compilation output (default: summary only)
 #   --quiet           Suppress all output except errors and final paths
 #   --clean           Remove auxiliary files without recompiling
@@ -24,6 +25,7 @@
 #   - Detects \makeglossaries and runs makeglossaries automatically
 #   - Runs multiple passes for cross-references
 #   - Optional latexmk backend for automatic dependency resolution
+#   - Optional Tectonic backend for reproducible bundle-based compilation
 #   - Optional texfot log filtering for cleaner output
 #   - Generates PNG previews with pdftoppm
 #   - Cleans auxiliary files after compilation
@@ -40,6 +42,7 @@
 #   compile_latex.sh document.tex --engine lualatex --preview
 #   compile_latex.sh paper.tex --auto-fix
 #   compile_latex.sh thesis.tex --use-latexmk --verbose
+#   compile_latex.sh paper.tex --use-tectonic
 #   compile_latex.sh thesis.tex --pdfa
 #   compile_latex.sh document.tex --clean
 
@@ -60,6 +63,7 @@ Options:
   --engine          LaTeX engine: pdflatex (default), xelatex, or lualatex
   --auto-fix        Apply automatic fixes (naked floats, microtype) to temp copy before compiling
   --use-latexmk     Use latexmk for compilation (automatic multi-pass, dependency tracking)
+  --use-tectonic    Use Tectonic backend for reproducible bundle-based compilation
   --verbose         Show full compilation output
   --quiet           Suppress all output except errors and final paths
   --clean           Remove auxiliary files without recompiling
@@ -73,6 +77,7 @@ Features:
   - Detects \makeglossaries and runs makeglossaries automatically
   - Runs multiple passes for cross-references
   - Optional latexmk backend (--use-latexmk) for automatic dependency resolution
+  - Optional Tectonic backend (--use-tectonic) for reproducible bundle-based compilation
   - Optional texfot log filtering for cleaner output (used automatically when available)
   - Generates PNG previews with pdftoppm
   - Cleans auxiliary files after compilation
@@ -90,6 +95,7 @@ Examples:
   compile_latex.sh document.tex --engine lualatex --preview
   compile_latex.sh paper.tex --auto-fix
   compile_latex.sh thesis.tex --use-latexmk --verbose
+  compile_latex.sh paper.tex --use-tectonic
   compile_latex.sh thesis.tex --pdfa
   compile_latex.sh document.tex --clean
 EOF
@@ -107,6 +113,7 @@ SCALE=1200
 ENGINE=""
 AUTO_FIX=false
 USE_LATEXMK=false
+USE_TECTONIC=false
 VERBOSE=false
 QUIET=false
 CLEAN_ONLY=false
@@ -121,6 +128,7 @@ while [[ $# -gt 0 ]]; do
     --engine) ENGINE="$2"; shift 2 ;;
     --auto-fix) AUTO_FIX=true; shift ;;
     --use-latexmk) USE_LATEXMK=true; shift ;;
+    --use-tectonic) USE_TECTONIC=true; shift ;;
     --verbose) VERBOSE=true; shift ;;
     --quiet) QUIET=true; shift ;;
     --clean) CLEAN_ONLY=true; shift ;;
@@ -138,6 +146,16 @@ fi
 
 if [[ ! -f "$INPUT_TEX" ]]; then
   echo "Error: File not found: $INPUT_TEX" >&2
+  exit 1
+fi
+
+if [[ "$USE_LATEXMK" == true && "$USE_TECTONIC" == true ]]; then
+  echo "Error: --use-latexmk and --use-tectonic are mutually exclusive" >&2
+  exit 1
+fi
+
+if [[ "$USE_TECTONIC" == true && -n "$ENGINE" ]]; then
+  echo "Error: --engine is not supported with --use-tectonic; Tectonic selects its own engine" >&2
   exit 1
 fi
 
@@ -201,6 +219,17 @@ ensure_texlive() {
   echo ":: TeX Live installed successfully" >&2
 }
 
+# --- Ensure Tectonic backend is available ---
+TECTONIC_COMMAND="${TECTONIC_BIN:-tectonic}"
+ensure_tectonic() {
+  if command -v "$TECTONIC_COMMAND" &>/dev/null; then
+    return 0
+  fi
+  echo "Error: tectonic not found. Install Tectonic or remove --use-tectonic." >&2
+  echo "Install: https://tectonic-typesetting.github.io/" >&2
+  exit 1
+}
+
 # --- Ensure poppler-utils for PDF-to-PNG ---
 ensure_poppler() {
   if command -v pdftoppm &>/dev/null; then
@@ -212,6 +241,36 @@ ensure_poppler() {
     print_install_help "poppler"
     exit 1
   }
+}
+
+# --- Detect auxiliary pass requirements in the target document graph ---
+declare -A AUX_SCAN_SEEN=()
+detect_auxiliary_requirements_in_graph() {
+  local tex_path="$1"
+  [[ -f "$tex_path" ]] || return 1
+  tex_path="$(cd "$(dirname "$tex_path")" && pwd)/$(basename "$tex_path")"
+  [[ -n "${AUX_SCAN_SEEN[$tex_path]:-}" ]] && return 1
+  AUX_SCAN_SEEN[$tex_path]=1
+
+  local uncommented
+  uncommented=$(sed 's/%.*//;/^[[:space:]]*$/d' "$tex_path" 2>/dev/null)
+  if echo "$uncommented" | grep -qE '\\bibliography\{|\\addbibresource(\[[^]]*\])?\{|\\printbibliography|\\makeindex|\\printindex|\\makeglossaries|\\printglossar(y|ies)|\\newglossaryentry|\\newacronym'; then
+    return 0
+  fi
+
+  local tex_dir include_path include_file
+  tex_dir="$(dirname "$tex_path")"
+  while IFS= read -r include_path; do
+    [[ -z "$include_path" ]] && continue
+    include_file="$include_path"
+    [[ "$include_file" == *.tex ]] || include_file="${include_file}.tex"
+    [[ "$include_file" = /* ]] || include_file="${tex_dir}/${include_file}"
+    if detect_auxiliary_requirements_in_graph "$include_file"; then
+      return 0
+    fi
+  done < <(echo "$uncommented" | grep -oE '\\(input|include)\{[^}]+\}' | sed -E 's/\\(input|include)\{([^}]+)\}/\2/')
+
+  return 1
 }
 
 # --- Auto-detect engine from document content ---
@@ -241,7 +300,7 @@ detect_bibliography() {
   uncommented=$(sed 's/%.*//;/^[[:space:]]*$/d' "$INPUT_TEX" 2>/dev/null)
   if echo "$uncommented" | grep -qE '\\bibliography\{'; then
     echo "bibtex"
-  elif echo "$uncommented" | grep -qE '\\addbibresource\{'; then
+  elif echo "$uncommented" | grep -qE '\\addbibresource(\[[^]]*\])?\{'; then
     echo "biber"
   else
     echo "none"
@@ -408,6 +467,13 @@ auto_inject_microtype() {
   fi
 }
 
+# --- Validate that a produced artifact at least looks like a PDF ---
+pdf_looks_valid() {
+  local pdf_file="$1"
+  [[ -f "$pdf_file" ]] || return 1
+  [[ "$(head -c 5 "$pdf_file" 2>/dev/null || true)" == "%PDF-" ]]
+}
+
 # --- Run engine command with optional texfot filtering ---
 # Uses texfot when available and not in verbose mode, to show only relevant warnings/errors.
 run_engine() {
@@ -429,6 +495,24 @@ run_engine() {
     # Default without texfot: suppress output
     "$engine" -interaction=nonstopmode "$@" "$texfile" >/dev/null 2>&1
   fi
+}
+
+# --- Tectonic compilation backend ---
+compile_with_tectonic() {
+  local texfile="$1"
+  local tectonic_exit=0
+
+  log_info "Using Tectonic for reproducible bundle-based compilation..."
+
+  if [[ "$VERBOSE" == true ]]; then
+    "$TECTONIC_COMMAND" "$texfile" >&2 || tectonic_exit=$?
+  elif [[ "$QUIET" == true ]]; then
+    "$TECTONIC_COMMAND" "$texfile" >/dev/null 2>&1 || tectonic_exit=$?
+  else
+    "$TECTONIC_COMMAND" "$texfile" >&2 || tectonic_exit=$?
+  fi
+
+  return $tectonic_exit
 }
 
 # --- PDF/A injection: add pdfx package to preamble ---
@@ -486,10 +570,18 @@ compile_with_latexmk() {
 }
 
 # --- Compile ---
-ensure_texlive
+if [[ "$USE_TECTONIC" == true ]]; then
+  ensure_tectonic
+else
+  ensure_texlive
+fi
 
 LATEX_ENGINE=$(detect_engine)
-log_info "Compiling ${INPUT_TEX} with ${LATEX_ENGINE}..."
+if [[ "$USE_TECTONIC" == true ]]; then
+  log_info "Compiling ${INPUT_TEX} with Tectonic backend..."
+else
+  log_info "Compiling ${INPUT_TEX} with ${LATEX_ENGINE}..."
+fi
 cd "$INPUT_DIR"
 
 # --- Auto-fix / PDF/A workflow: create temp copy if needed ---
@@ -542,6 +634,13 @@ fi
 if [[ "$LATEX_ENGINE" != "pdflatex" ]]; then
   log_info "Using engine: $LATEX_ENGINE"
 fi
+AUX_SCAN_SEEN=()
+if [[ "$USE_TECTONIC" == true ]] && detect_auxiliary_requirements_in_graph "$INPUT_TEX"; then
+  echo "Error: --use-tectonic does not run this wrapper's bibliography/index/glossary auxiliary passes." >&2
+  echo "Use the default backend or --use-latexmk for documents that require BibTeX, biber, makeindex, or makeglossaries." >&2
+  exit 1
+fi
+
 if [[ "$BIB_ENGINE" != "none" ]]; then
   log_info "Detected bibliography ($BIB_ENGINE) -- will run bibliography pass"
 fi
@@ -568,10 +667,47 @@ if [[ -n "$TEMP_DIR" ]]; then
   ACTUAL_PDF="${TEMP_DIR}/${INPUT_BASE}.pdf"
 fi
 
+# Guard against stale output PDFs for every backend. Any successful compile must
+# create a fresh ACTUAL_PDF after this point; failures restore the prior PDF.
+FRESH_PDF_BACKUP=""
+FRESH_PDF_GUARD_ACTIVE=true
+restore_fresh_pdf_backup() {
+  if [[ "$FRESH_PDF_GUARD_ACTIVE" == true ]]; then
+    FRESH_PDF_GUARD_ACTIVE=false
+    rm -f "$ACTUAL_PDF"
+    if [[ -n "$FRESH_PDF_BACKUP" && -f "$FRESH_PDF_BACKUP" ]]; then
+      mv "$FRESH_PDF_BACKUP" "$ACTUAL_PDF" || true
+    fi
+  fi
+}
+handle_compile_interrupt() {
+  restore_fresh_pdf_backup
+  exit 130
+}
+if [[ -f "$ACTUAL_PDF" ]]; then
+  FRESH_PDF_BACKUP="${ACTUAL_PDF}.pre-compile.$$"
+  mv "$ACTUAL_PDF" "$FRESH_PDF_BACKUP"
+fi
+trap restore_fresh_pdf_backup EXIT
+trap handle_compile_interrupt INT TERM
+
 # =================================================================
-# COMPILATION: latexmk branch vs manual multi-pass branch
+# COMPILATION: Tectonic, latexmk, or manual multi-pass backend
 # =================================================================
-if [[ "$USE_LATEXMK" == true ]]; then
+if [[ "$USE_TECTONIC" == true ]]; then
+  # --- Tectonic backend ---
+  TECTONIC_EXIT=0
+
+  compile_with_tectonic "$WORKING_TEX" || TECTONIC_EXIT=$?
+
+  if [[ $TECTONIC_EXIT -ne 0 ]] || ! pdf_looks_valid "$ACTUAL_PDF"; then
+    echo "Error: Tectonic compilation failed - no valid fresh PDF produced" >&2
+    parse_errors "$LOG_FILE"
+    [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+    exit 1
+  fi
+
+elif [[ "$USE_LATEXMK" == true ]]; then
   # --- latexmk backend ---
   if ! command -v latexmk &>/dev/null; then
     echo "Error: latexmk not found. Install with: sudo apt-get install latexmk" >&2
@@ -583,14 +719,20 @@ if [[ "$USE_LATEXMK" == true ]]; then
   LATEXMK_EXIT=0
   compile_with_latexmk "$LATEX_ENGINE" "$WORKING_TEX" || LATEXMK_EXIT=$?
 
-  if [[ $LATEXMK_EXIT -ne 0 && ! -f "$ACTUAL_PDF" ]]; then
-    echo "Error: latexmk compilation failed - no PDF produced" >&2
+  if [[ $LATEXMK_EXIT -ne 0 ]]; then
+    if pdf_looks_valid "$ACTUAL_PDF"; then
+      log_info "latexmk exited non-zero but produced a valid fresh PDF"
+    else
+      echo "Error: latexmk compilation failed - no valid fresh PDF produced" >&2
+      parse_errors "$LOG_FILE"
+      [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+      exit 1
+    fi
+  elif ! pdf_looks_valid "$ACTUAL_PDF"; then
+    echo "Error: latexmk compilation failed - no valid fresh PDF produced" >&2
     parse_errors "$LOG_FILE"
     [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
     exit 1
-  fi
-  if [[ $LATEXMK_EXIT -ne 0 && -f "$ACTUAL_PDF" ]]; then
-    log_info "latexmk had warnings (PDF still produced)"
   fi
 
 else
@@ -600,18 +742,26 @@ else
   FIRST_PASS_EXIT=0
   run_engine "$LATEX_ENGINE" "$WORKING_TEX" || FIRST_PASS_EXIT=$?
 
-  if [[ $FIRST_PASS_EXIT -ne 0 && ! -f "$ACTUAL_PDF" ]]; then
-    log_info "First pass failed. Running diagnostic pass..."
-    "$LATEX_ENGINE" -interaction=nonstopmode "$WORKING_TEX" 2>&1 | tail -50 >&2
-    if [[ ! -f "$ACTUAL_PDF" ]]; then
-      echo "Error: Compilation failed - no PDF produced" >&2
-      parse_errors "$LOG_FILE"
-      [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
-      exit 1
+  if [[ $FIRST_PASS_EXIT -ne 0 ]]; then
+    if pdf_looks_valid "$ACTUAL_PDF"; then
+      log_info "First pass exited non-zero but produced a valid fresh PDF"
+    else
+      log_info "First pass failed. Running diagnostic pass..."
+      "$LATEX_ENGINE" -interaction=nonstopmode "$WORKING_TEX" 2>&1 | tail -50 >&2
+      if pdf_looks_valid "$ACTUAL_PDF"; then
+        log_info "Diagnostic pass produced a valid fresh PDF"
+      else
+        echo "Error: Compilation failed - no valid fresh PDF produced" >&2
+        parse_errors "$LOG_FILE"
+        [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+        exit 1
+      fi
     fi
-  fi
-  if [[ $FIRST_PASS_EXIT -ne 0 && -f "$ACTUAL_PDF" ]]; then
-    log_info "First pass had warnings (PDF still produced)"
+  elif ! pdf_looks_valid "$ACTUAL_PDF"; then
+    echo "Error: Compilation failed - no valid fresh PDF produced" >&2
+    parse_errors "$LOG_FILE"
+    [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+    exit 1
   fi
 
   # Auto-fix Stage 2: Check for overfull hbox and inject microtype if needed
@@ -633,12 +783,16 @@ else
   if [[ "$BIB_ENGINE" == "bibtex" ]]; then
     log_info "Running bibtex..."
     bibtex "$INPUT_BASE" >/dev/null 2>&1 || {
-      log_info "bibtex had warnings (this is often normal for first run)"
+      echo "Error: bibtex failed" >&2
+      [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+      exit 1
     }
   elif [[ "$BIB_ENGINE" == "biber" ]]; then
     log_info "Running biber..."
     biber "$INPUT_BASE" >/dev/null 2>&1 || {
-      log_info "biber had warnings"
+      echo "Error: biber failed" >&2
+      [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+      exit 1
     }
   fi
 
@@ -646,7 +800,9 @@ else
   if [[ "$NEEDS_INDEX" == true ]]; then
     log_info "Running makeindex..."
     makeindex "$INPUT_BASE" >/dev/null 2>&1 || {
-      log_info "makeindex had warnings"
+      echo "Error: makeindex failed" >&2
+      [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+      exit 1
     }
   fi
 
@@ -654,17 +810,31 @@ else
   if [[ "$NEEDS_GLOSSARY" == true ]]; then
     log_info "Running makeglossaries..."
     makeglossaries "$INPUT_BASE" >/dev/null 2>&1 || {
-      log_info "makeglossaries had warnings (ensure glossaries package is installed)"
+      echo "Error: makeglossaries failed" >&2
+      [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+      exit 1
     }
   fi
 
   # Second pass (resolves references after bibtex/biber/makeindex/glossaries)
-  run_engine "$LATEX_ENGINE" "$WORKING_TEX" || true
+  SECOND_PASS_EXIT=0
+  run_engine "$LATEX_ENGINE" "$WORKING_TEX" || SECOND_PASS_EXIT=$?
+  if [[ $SECOND_PASS_EXIT -ne 0 ]] && ! pdf_looks_valid "$ACTUAL_PDF"; then
+    echo "Error: Second LaTeX pass failed without a valid fresh PDF" >&2
+    [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+    exit 1
+  fi
 
   # Third pass if bibliography, index, or glossary was used (final cross-ref resolution)
   if [[ "$BIB_ENGINE" != "none" || "$NEEDS_INDEX" == true || "$NEEDS_GLOSSARY" == true ]]; then
     log_info "Running final pass for cross-references..."
-    run_engine "$LATEX_ENGINE" "$WORKING_TEX" || true
+    FINAL_PASS_EXIT=0
+    run_engine "$LATEX_ENGINE" "$WORKING_TEX" || FINAL_PASS_EXIT=$?
+    if [[ $FINAL_PASS_EXIT -ne 0 ]] && ! pdf_looks_valid "$ACTUAL_PDF"; then
+      echo "Error: Final LaTeX pass failed without a valid fresh PDF" >&2
+      [[ -n "$TEMP_DIR" ]] && rm -rf "$TEMP_DIR"
+      exit 1
+    fi
   fi
 
 fi
@@ -672,14 +842,32 @@ fi
 # Handle PDF location based on temp dir mode (auto-fix or pdfa)
 if [[ -n "$TEMP_DIR" ]]; then
   TEMP_PDF="${TEMP_DIR}/${INPUT_BASE}.pdf"
-  if [[ ! -f "$TEMP_PDF" ]]; then
-    echo "Error: PDF not produced" >&2
+  if ! pdf_looks_valid "$TEMP_PDF"; then
+    echo "Error: valid PDF not produced" >&2
     parse_errors "$LOG_FILE"
     rm -rf "$TEMP_DIR"
     exit 1
   fi
-  # Copy PDF back to original location
-  cp "$TEMP_PDF" "$PDF_FILE"
+  # Copy PDF back to original location through a guarded replace.
+  FINAL_NEW="${PDF_FILE}.new.$$"
+  FINAL_BACKUP=""
+  cp "$TEMP_PDF" "$FINAL_NEW" || {
+    rm -f "$FINAL_NEW"
+    rm -rf "$TEMP_DIR"
+    exit 1
+  }
+  if [[ -f "$PDF_FILE" ]]; then
+    FINAL_BACKUP="${PDF_FILE}.pre-temp-compile.$$"
+    mv "$PDF_FILE" "$FINAL_BACKUP"
+  fi
+  if mv "$FINAL_NEW" "$PDF_FILE"; then
+    [[ -n "$FINAL_BACKUP" && -f "$FINAL_BACKUP" ]] && rm -f "$FINAL_BACKUP"
+  else
+    [[ -n "$FINAL_BACKUP" && -f "$FINAL_BACKUP" ]] && mv "$FINAL_BACKUP" "$PDF_FILE" || true
+    rm -f "$FINAL_NEW"
+    rm -rf "$TEMP_DIR"
+    exit 1
+  fi
   log_info "PDF created: ${PDF_FILE}"
   if [[ "$AUTO_FIX" == true ]]; then
     log_detail "(compiled from auto-fixed temporary copy)"
@@ -688,13 +876,18 @@ if [[ -n "$TEMP_DIR" ]]; then
     log_detail "(PDF/A-2b compliant)"
   fi
 else
-  if [[ ! -f "$PDF_FILE" ]]; then
-    echo "Error: PDF not produced" >&2
+  if ! pdf_looks_valid "$PDF_FILE"; then
+    echo "Error: valid PDF not produced" >&2
     parse_errors "$LOG_FILE"
     exit 1
   fi
   log_info "PDF created: ${PDF_FILE}"
 fi
+
+# Fresh PDF validated; disable stale-output rollback.
+FRESH_PDF_GUARD_ACTIVE=false
+trap - EXIT INT TERM
+[[ -n "$FRESH_PDF_BACKUP" && -f "$FRESH_PDF_BACKUP" ]] && rm -f "$FRESH_PDF_BACKUP"
 
 # Run error analysis on successful compilation (for warnings/suggestions)
 if [[ -f "$LOG_FILE" && "$QUIET" != true ]]; then
