@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  27 templates &middot; 27 automation scripts &middot; 26 reference guides &middot; 4 OCR profiles &middot; 217 tests &middot; 0 LaTeX commands required
+  27 templates &middot; 32 automation scripts &middot; 29 reference guides &middot; 4 OCR profiles &middot; stabilized shell tests &middot; 0 LaTeX commands required
 </p>
 
 ---
@@ -21,6 +21,9 @@
 ## The 10-Second Pitch
 
 You describe a document in plain English. This skill produces a compiled PDF.
+
+> **v2 production workflow:** scaffold a project, build with the right backend, check accessibility readiness, package the submission, and run a stabilized test suite. See [LaTeX Document Skill v2](references/v2-overview.md).
+
 
 - An 80-page handwritten math PDF becomes color-coded lecture notes with proper equations and TikZ diagrams.
 - A 162-page textbook becomes a 2-page cheat sheet.
