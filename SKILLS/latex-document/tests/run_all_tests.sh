@@ -114,6 +114,10 @@ run_test_suite() {
     echo -e "${GREEN}✓ PASSED${NC} - $suite_name (${duration}s)"
     SUITE_RESULTS+=("PASS")
     PASSED_SUITES=$((PASSED_SUITES + 1))
+  elif [[ $exit_code -eq 77 ]]; then
+    echo -e "${YELLOW}[SKIP]${NC} $suite_name - dependency unavailable (${duration}s)"
+    SUITE_RESULTS+=("SKIP")
+    SKIPPED_SUITES=$((SKIPPED_SUITES + 1))
   else
     echo -e "${RED}✗ FAILED${NC} - $suite_name (${duration}s)"
     SUITE_RESULTS+=("FAIL")
@@ -175,17 +179,23 @@ print_summary() {
   echo ""
   echo -e "${CYAN}========================================${NC}"
 
-  # Exit status: require no failures and at least PASS_THRESHOLD_PERCENT of discovered suites passing.
-  local required_passed=$(( (TOTAL_SUITES * PASS_THRESHOLD_PERCENT + PERCENT_DENOMINATOR - 1) / PERCENT_DENOMINATOR ))
+  # Exit status: require no failures and at least PASS_THRESHOLD_PERCENT of runnable suites passing.
+  # Explicit dependency skips are reported but do not make one missing optional tool fail the whole run.
+  local runnable_suites=$((TOTAL_SUITES - SKIPPED_SUITES))
+  if [[ $runnable_suites -eq 0 ]]; then
+    echo -e "${RED}No runnable test suites found.${NC}"
+    return 1
+  fi
+  local required_passed=$(( (runnable_suites * PASS_THRESHOLD_PERCENT + PERCENT_DENOMINATOR - 1) / PERCENT_DENOMINATOR ))
   if [[ $FAILED_SUITES -eq 0 && $PASSED_SUITES -ge $required_passed ]]; then
-    echo -e "${GREEN}All required test suites passed!${NC}"
+    echo -e "${GREEN}All required runnable test suites passed!${NC}"
     return 0
   fi
 
   if [[ $FAILED_SUITES -gt 0 ]]; then
     echo -e "${RED}Some test suites failed.${NC}"
   else
-    echo -e "${RED}Too many suites skipped: ${PASSED_SUITES}/${TOTAL_SUITES} passed, ${required_passed}/${TOTAL_SUITES} required.${NC}"
+    echo -e "${RED}Too many runnable suites skipped: ${PASSED_SUITES}/${runnable_suites} runnable suites passed, ${required_passed}/${runnable_suites} required.${NC}"
   fi
   return 1
 }
@@ -218,6 +228,7 @@ main() {
   # Project workflow tests
   run_test_suite "${SCRIPT_DIR}/test_project_scaffolding.sh" "Project Scaffolding Tests"
   run_test_suite "${SCRIPT_DIR}/test_submission_packager.sh" "Submission Packager Tests"
+  run_test_suite "${SCRIPT_DIR}/test_accessibility_checker.sh" "Accessibility Checker Tests"
 
   # Additional suites (skips count against the final pass threshold when excessive)
   run_test_suite "${SCRIPT_DIR}/test_python_scripts.py" "Python Scripts Tests"

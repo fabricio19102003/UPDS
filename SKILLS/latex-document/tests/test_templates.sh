@@ -29,6 +29,9 @@ declare -a TEST_RESULTS
 declare -a TEST_TIMES
 declare -a TEST_MESSAGES
 
+# Per-template compile guard. Keeps one slow/broken template from hanging the suite.
+TEMPLATE_TIMEOUT_SECONDS=${TEMPLATE_TIMEOUT_SECONDS:-300}
+
 echo "=========================================="
 echo "Template Compilation Test Suite"
 echo "=========================================="
@@ -75,6 +78,27 @@ needs_makeindex() {
   grep -qE '\\makeindex|\\printindex' "$tex_file"
 }
 
+format_duration() {
+  local start_time="$1"
+  local end_time="$2"
+  if command -v bc >/dev/null 2>&1; then
+    echo "$end_time - $start_time" | bc
+  else
+    echo "n/a"
+  fi
+}
+
+run_compile_with_timeout() {
+  local compile_log="$1"
+  shift
+
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "${TEMPLATE_TIMEOUT_SECONDS}" "$@" > "$compile_log" 2>&1
+  else
+    "$@" > "$compile_log" 2>&1
+  fi
+}
+
 # Test a single template
 test_template() {
   local template_name="$1"
@@ -83,8 +107,9 @@ test_template() {
   TOTAL_TESTS=$((TOTAL_TESTS + 1))
 
   if [[ ! -f "$template_path" ]]; then
-    echo -e "${RED}[SKIP]${NC} ${template_name} - File not found"
-    TEST_RESULTS+=("SKIP")
+    echo -e "${RED}FAIL${NC} ${template_name} - File not found"
+    FAILED_TESTS=$((FAILED_TESTS + 1))
+    TEST_RESULTS+=("FAIL")
     TEST_TIMES+=("0")
     TEST_MESSAGES+=("File not found")
     return
@@ -116,13 +141,25 @@ test_template() {
   local compile_exit=0
 
   if [[ "$engine" == "pdflatex" ]]; then
-    "${COMPILE_SCRIPT}" "${test_dir}/${template_name}.tex" > "$compile_log" 2>&1 || compile_exit=$?
+    run_compile_with_timeout "$compile_log" "${COMPILE_SCRIPT}" "${test_dir}/${template_name}.tex" || compile_exit=$?
   else
-    "${COMPILE_SCRIPT}" "${test_dir}/${template_name}.tex" --engine "$engine" > "$compile_log" 2>&1 || compile_exit=$?
+    run_compile_with_timeout "$compile_log" "${COMPILE_SCRIPT}" "${test_dir}/${template_name}.tex" --engine "$engine" || compile_exit=$?
   fi
 
   local end_time=$(date +%s.%N)
-  local duration=$(echo "$end_time - $start_time" | bc)
+  local duration
+  duration=$(format_duration "$start_time" "$end_time")
+
+  if [[ $compile_exit -eq 124 ]]; then
+    echo -e "${RED}FAIL${NC} (${duration}s) - Timed out after ${TEMPLATE_TIMEOUT_SECONDS}s"
+    FAILED_TESTS=$((FAILED_TESTS + 1))
+    TEST_RESULTS+=("FAIL")
+    TEST_TIMES+=("$duration")
+    TEST_MESSAGES+=("Timed out after ${TEMPLATE_TIMEOUT_SECONDS}s")
+    echo "  Last 20 lines of compilation output:"
+    tail -20 "$compile_log" | sed 's/^/    /'
+    return
+  fi
 
   # Check if PDF was produced
   local pdf_path="${test_dir}/${template_name}.pdf"

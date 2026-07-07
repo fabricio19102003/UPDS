@@ -83,6 +83,32 @@ run_test() {
     TESTS_RUN=$((TESTS_RUN + 1))
 }
 
+latexdiff_usable() {
+    command -v latexdiff &>/dev/null || return 1
+
+    local probe_dir
+    probe_dir=$(mktemp -d)
+    cat > "${probe_dir}/old.tex" <<'EOF'
+\documentclass{article}
+\begin{document}
+Old text.
+\end{document}
+EOF
+    cat > "${probe_dir}/new.tex" <<'EOF'
+\documentclass{article}
+\begin{document}
+New text.
+\end{document}
+EOF
+
+    if latexdiff "${probe_dir}/old.tex" "${probe_dir}/new.tex" >/dev/null 2>&1; then
+        rm -rf "$probe_dir"
+        return 0
+    fi
+    rm -rf "$probe_dir"
+    return 1
+}
+
 # --- Test: latex_lint.sh ---
 
 test_latex_lint_basic() {
@@ -137,15 +163,24 @@ test_latex_lint_strict_mode() {
         return
     fi
 
-    local exit_code
-    bash "${SCRIPTS_DIR}/latex_lint.sh" "${FIXTURES_DIR}/test_document.tex" --strict 2>&1 >/dev/null || exit_code=$?
+    local output exit_code
+    exit_code=0
+    output=$(bash "${SCRIPTS_DIR}/latex_lint.sh" "${FIXTURES_DIR}/test_document.tex" --strict 2>&1) || exit_code=$?
 
-    # In strict mode, warnings should cause non-zero exit
-    if [[ "${exit_code:-0}" -ne 0 ]] || [[ "${exit_code:-0}" -eq 0 ]]; then
-        # Either way is acceptable - depends on if there are warnings
-        pass "latex_lint.sh - Strict mode"
+    if echo "$output" | grep -qE "Found [0-9]+ (error|warning)"; then
+        if [[ $exit_code -ne 0 ]]; then
+            pass "latex_lint.sh - Strict mode"
+        else
+            fail "latex_lint.sh - Strict mode" "Strict mode reported issues but exited 0"
+        fi
+    elif echo "$output" | grep -q "No issues found"; then
+        if [[ $exit_code -eq 0 ]]; then
+            pass "latex_lint.sh - Strict mode"
+        else
+            fail "latex_lint.sh - Strict mode" "Strict mode reported no issues but exited non-zero"
+        fi
     else
-        fail "latex_lint.sh - Strict mode" "Unexpected behavior"
+        fail "latex_lint.sh - Strict mode" "Unexpected output"
     fi
 }
 
@@ -701,6 +736,96 @@ test_graphviz_to_pdf_basic() {
     fi
 }
 
+test_graphviz_to_pdf_batch_fake_dot() {
+    run_test "graphviz_to_pdf.sh - Batch conversion accounting"
+
+    local fake_bin="${TEST_OUTPUT_DIR}/fake-graphviz-bin"
+    local batch_dir="${TEST_OUTPUT_DIR}/graphviz-batch"
+    mkdir -p "$fake_bin" "$batch_dir"
+    cat > "${fake_bin}/dot" <<'EOF'
+#!/usr/bin/env bash
+output=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -o)
+            output="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+[[ -n "$output" ]] || exit 1
+printf 'fake graphviz output\n' > "$output"
+EOF
+    chmod +x "${fake_bin}/dot"
+    cat > "${batch_dir}/a.dot" <<'EOF'
+digraph A { a -> b }
+EOF
+    cat > "${batch_dir}/b.dot" <<'EOF'
+digraph B { c -> d }
+EOF
+
+    local output
+    output=$(PATH="${fake_bin}:$PATH" bash "${SCRIPTS_DIR}/graphviz_to_pdf.sh" "$batch_dir" --format png 2>&1 || true)
+
+    if [[ -f "${batch_dir}/a.png" && -f "${batch_dir}/b.png" ]] && echo "$output" | grep -q "Success: 2"; then
+        pass "graphviz_to_pdf.sh - Batch conversion accounting"
+    else
+        fail "graphviz_to_pdf.sh - Batch conversion accounting" "Batch conversion did not process both files"
+    fi
+}
+
+test_graphviz_to_pdf_batch_failure_accounting() {
+    run_test "graphviz_to_pdf.sh - Batch failure accounting"
+
+    local fake_bin="${TEST_OUTPUT_DIR}/fake-graphviz-fail-bin"
+    local batch_dir="${TEST_OUTPUT_DIR}/graphviz-batch-fail"
+    mkdir -p "$fake_bin" "$batch_dir"
+    cat > "${fake_bin}/dot" <<'EOF'
+#!/usr/bin/env bash
+input=""
+output=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -o)
+            output="$2"
+            shift 2
+            ;;
+        -*)
+            shift
+            ;;
+        *)
+            input="$1"
+            shift
+            ;;
+    esac
+done
+[[ "$input" == *b.dot ]] && exit 2
+[[ -n "$output" ]] || exit 1
+printf 'fake graphviz output\n' > "$output"
+EOF
+    chmod +x "${fake_bin}/dot"
+    cat > "${batch_dir}/a.dot" <<'EOF'
+digraph A { a -> b }
+EOF
+    cat > "${batch_dir}/b.dot" <<'EOF'
+digraph B { c -> d }
+EOF
+
+    local output exit_code
+    exit_code=0
+    output=$(PATH="${fake_bin}:$PATH" bash "${SCRIPTS_DIR}/graphviz_to_pdf.sh" "$batch_dir" --format png 2>&1) || exit_code=$?
+
+    if [[ $exit_code -ne 0 && -f "${batch_dir}/a.png" && ! -f "${batch_dir}/b.png" ]] && \
+       echo "$output" | grep -q "Success: 1" && echo "$output" | grep -q "Failed: 1"; then
+        pass "graphviz_to_pdf.sh - Batch failure accounting"
+    else
+        fail "graphviz_to_pdf.sh - Batch failure accounting" "Batch failure did not report partial success/failure correctly"
+    fi
+}
+
 # --- Test: plantuml_to_pdf.sh ---
 
 test_plantuml_to_pdf_help() {
@@ -899,8 +1024,8 @@ test_latex_diff_missing_files() {
 test_latex_diff_basic() {
     run_test "latex_diff.sh - Basic diff generation"
 
-    if ! command -v latexdiff &>/dev/null; then
-        skip "latex_diff.sh - Basic diff generation" "latexdiff not available"
+    if ! latexdiff_usable; then
+        skip "latex_diff.sh - Basic diff generation" "latexdiff not available or missing runtime dependencies"
         return
     fi
 
@@ -921,8 +1046,8 @@ test_latex_diff_basic() {
 test_latex_diff_output_content() {
     run_test "latex_diff.sh - Diff output contains markup"
 
-    if ! command -v latexdiff &>/dev/null; then
-        skip "latex_diff.sh - Diff output contains markup" "latexdiff not available"
+    if ! latexdiff_usable; then
+        skip "latex_diff.sh - Diff output contains markup" "latexdiff not available or missing runtime dependencies"
         return
     fi
 
@@ -942,8 +1067,8 @@ test_latex_diff_output_content() {
 test_latex_diff_type_option() {
     run_test "latex_diff.sh - Markup type option"
 
-    if ! command -v latexdiff &>/dev/null; then
-        skip "latex_diff.sh - Markup type option" "latexdiff not available"
+    if ! latexdiff_usable; then
+        skip "latex_diff.sh - Markup type option" "latexdiff not available or missing runtime dependencies"
         return
     fi
 
@@ -1056,6 +1181,8 @@ main() {
     test_graphviz_to_pdf_engine_validation
     test_graphviz_to_pdf_missing_file
     test_graphviz_to_pdf_basic
+    test_graphviz_to_pdf_batch_fake_dot
+    test_graphviz_to_pdf_batch_failure_accounting
 
     # plantuml_to_pdf.sh tests
     echo ""

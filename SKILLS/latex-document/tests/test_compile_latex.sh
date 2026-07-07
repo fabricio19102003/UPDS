@@ -862,7 +862,7 @@ EOF
 #!/usr/bin/env bash
 texfile="$1"
 pdf="${texfile%.tex}.pdf"
-printf '%s\n' '%PDF- fake pdf' > "$pdf"
+printf '%s\n' '%PDF- fake pdf' '%%EOF' > "$pdf"
 exit 0
 EOF
   chmod +x "$fake_bin/tectonic"
@@ -958,7 +958,7 @@ EOF
 #!/usr/bin/env bash
 texfile="${@: -1}"
 pdf="${texfile%.tex}.pdf"
-printf '%s\n' '%PDF- fake pdf' > "$pdf"
+printf '%s\n' '%PDF- fake pdf' '%%EOF' > "$pdf"
 exit 0
 EOF
   cat > "$fake_bin/biber" <<'EOF'

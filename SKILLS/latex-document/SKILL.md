@@ -59,7 +59,8 @@ description: >
   (50) add a watermark to an existing PDF,
   (51) extract metadata from a PDF (title, author, subject),
   (52) package a final submission with PDF, sources, bibliography, figures,
-  data, manifest, checklist, and optional ZIP archive.
+  data, manifest, checklist, and optional ZIP archive,
+  (53) check accessibility readiness for LaTeX sources, scaffolded projects, or PDFs.
 ---
 
 # LaTeX Document Skill
@@ -131,6 +132,18 @@ bash <skill_path>/scripts/package_submission.sh ./my-document --name final-docum
 ```
 
 The package includes `final/`, `source/`, `figures/`, `data/`, `manifest.txt`, and `submission-checklist.md`. Full guide: [references/submission-packaging.md](references/submission-packaging.md).
+
+## Workflow: Accessibility Readiness Check
+
+Use this before final delivery, thesis/archive submission, or when the user asks for accessible/PDF-A-ready output.
+
+```bash
+bash <skill_path>/scripts/check_accessibility.sh ./my-document
+bash <skill_path>/scripts/check_accessibility.sh ./my-document --strict
+bash <skill_path>/scripts/check_accessibility.sh ./my-document --json
+```
+
+The checker validates LaTeX metadata, `hyperref`/`pdfx` setup, captions/description hints for images and tables, raw URLs, valid PDF headers, and optional PDF metadata/encryption probes when local tools are available. Full guide: [references/accessibility-guide.md](references/accessibility-guide.md).
 
 ## Workflow: Mail Merge (Batch Personalized Documents)
 

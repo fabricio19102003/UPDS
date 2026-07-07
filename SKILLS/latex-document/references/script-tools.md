@@ -42,6 +42,25 @@ bash <skill_path>/scripts/package_submission.sh ./my-document --include-build
 
 Use this workflow when a document is ready for course submission, client delivery, review, archive, or conference/journal handoff. Custom package directories must stay under project `outputs/`; package names must use safe filename characters only. The script refuses unsafe or existing non-package output paths. See `references/submission-packaging.md` for package layout and checklist rules.
 
+## Accessibility Tools
+
+```bash
+# Check a scaffolded document project
+bash <skill_path>/scripts/check_accessibility.sh ./my-document
+
+# Fail when warnings exist, useful before final handoff
+bash <skill_path>/scripts/check_accessibility.sh ./my-document --strict
+
+# Machine-readable summary
+bash <skill_path>/scripts/check_accessibility.sh ./my-document --json
+
+# Check a single .tex or .pdf file
+bash <skill_path>/scripts/check_accessibility.sh document.tex
+bash <skill_path>/scripts/check_accessibility.sh document.pdf
+```
+
+Use this before thesis/archive submission, final client delivery, or PDF/A/accessibility review. The checker is source-first and dependency-light: it always checks LaTeX accessibility signals, uses `pdfinfo`/`qpdf` only when already installed, and requires `python3` only for `--json` output.
+
 ## PDF Tools
 
 ### PDF-to-Images Script

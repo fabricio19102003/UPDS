@@ -14,7 +14,8 @@
 % Encoding and fonts
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{microtype}
+% Protrusion-only avoids pdfTeX font-expansion failures with bitmap/non-scalable fonts on MiKTeX.
+\usepackage[protrusion=true,expansion=false]{microtype}
 
 % Page layout
 \usepackage[margin=1in]{geometry}

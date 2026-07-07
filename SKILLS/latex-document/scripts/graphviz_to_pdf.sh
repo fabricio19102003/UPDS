@@ -115,6 +115,12 @@ if ! [[ "$DPI" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
+# Validate the input path before dependency checks so user/file errors are reported clearly.
+if [[ ! -f "$INPUT_PATH" && ! -d "$INPUT_PATH" ]]; then
+    echo "Error: Input file not found: $INPUT_PATH" >&2
+    exit 1
+fi
+
 # Check if Graphviz is installed
 if ! command -v dot &>/dev/null; then
     echo "Graphviz not found. Installing..." >&2
@@ -176,13 +182,14 @@ convert_file() {
     echo "Converting $input_file -> $output_file (engine: $ENGINE, format: $FORMAT)" >&2
 
     # Build command based on format
+    local convert_exit=0
     if [[ "$FORMAT" == "pdf" ]]; then
-        "$ENGINE" -Tpdf "$input_file" -o "$output_file"
+        "$ENGINE" -Tpdf "$input_file" -o "$output_file" || convert_exit=$?
     elif [[ "$FORMAT" == "png" ]]; then
-        "$ENGINE" -Tpng -Gdpi="$DPI" "$input_file" -o "$output_file"
+        "$ENGINE" -Tpng -Gdpi="$DPI" "$input_file" -o "$output_file" || convert_exit=$?
     fi
 
-    if [[ $? -eq 0 ]]; then
+    if [[ $convert_exit -eq 0 ]]; then
         echo "Successfully created: $output_file" >&2
         return 0
     else
@@ -218,9 +225,9 @@ if [[ -d "$INPUT_PATH" ]]; then
         output_file="$INPUT_PATH/${filename}.$FORMAT"
 
         if convert_file "$dot_file" "$output_file"; then
-            ((success_count++))
+            success_count=$((success_count + 1))
         else
-            ((fail_count++))
+            fail_count=$((fail_count + 1))
         fi
     done
 
