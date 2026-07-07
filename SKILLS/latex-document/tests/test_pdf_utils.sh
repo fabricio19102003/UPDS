@@ -26,6 +26,12 @@ FAILED_TESTS=0
 # Setup test environment
 setup() {
     echo -e "${BLUE}=== Setting up test environment ===${NC}"
+
+    if ! command -v qpdf &>/dev/null; then
+        echo -e "${YELLOW}⊘ SKIP${NC}: qpdf not available; skipping PDF utility tests that require qpdf"
+        exit 77
+    fi
+
     mkdir -p "$TEST_FIXTURE_DIR"
     cd "$TEST_FIXTURE_DIR"
 

@@ -15,6 +15,18 @@ A comprehensive reference for creating accessible, PDF/A-compliant documents fro
 
 ---
 
+## Quick Automated Check
+
+Run the lightweight checker before final delivery or archive submission:
+
+```bash
+bash <skill_path>/scripts/check_accessibility.sh ./my-document
+bash <skill_path>/scripts/check_accessibility.sh ./my-document --strict
+bash <skill_path>/scripts/check_accessibility.sh ./my-document --json
+```
+
+The checker validates source-level metadata, `hyperref`/`pdfx` setup, figure/table captions, image description hints, raw URLs, valid PDF headers, and optional PDF metadata/encryption probes when `pdfinfo` or `qpdf` are installed. JSON output requires `python3`.
+
 ## 1. PDF/A Compliance (Priority for Thesis Submissions)
 
 ### What is PDF/A and Why Universities Require It

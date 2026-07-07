@@ -471,7 +471,8 @@ auto_inject_microtype() {
 pdf_looks_valid() {
   local pdf_file="$1"
   [[ -f "$pdf_file" ]] || return 1
-  [[ "$(head -c 5 "$pdf_file" 2>/dev/null || true)" == "%PDF-" ]]
+  [[ "$(head -c 5 "$pdf_file" 2>/dev/null || true)" == "%PDF-" ]] || return 1
+  tail -c 2048 "$pdf_file" 2>/dev/null | grep -q '%%EOF'
 }
 
 # --- Run engine command with optional texfot filtering ---
@@ -747,7 +748,14 @@ else
       log_info "First pass exited non-zero but produced a valid fresh PDF"
     else
       log_info "First pass failed. Running diagnostic pass..."
+      DIAGNOSTIC_PASS_EXIT=0
+      set +e
       "$LATEX_ENGINE" -interaction=nonstopmode "$WORKING_TEX" 2>&1 | tail -50 >&2
+      DIAGNOSTIC_PASS_EXIT=${PIPESTATUS[0]}
+      set -e
+      if [[ $DIAGNOSTIC_PASS_EXIT -ne 0 ]]; then
+        log_info "Diagnostic pass exited non-zero; checking whether it produced a valid fresh PDF"
+      fi
       if pdf_looks_valid "$ACTUAL_PDF"; then
         log_info "Diagnostic pass produced a valid fresh PDF"
       else
