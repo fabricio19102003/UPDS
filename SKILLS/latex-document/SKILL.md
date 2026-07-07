@@ -15,8 +15,8 @@ description: >
   Pandoc format conversion (Markdown/DOCX/HTML ↔ LaTeX),
   and PDF-to-LaTeX conversion of handwritten or printed documents (math, business,
   legal, general). Compile script supports pdflatex, xelatex, lualatex with
-  auto-detection, latexmk backend, texfot log filtering, PDF/A output, and
-  verbosity control (--verbose/--quiet). Empirically optimized scaling: single agent 1-10 pages, split
+  auto-detection, latexmk backend, Tectonic backend, texfot log filtering,
+  PDF/A output, and verbosity control (--verbose/--quiet). Empirically optimized scaling: single agent 1-10 pages, split
   11-20, batch-7 pipeline 21+. Use when user asks to: (1) create a resume/CV/cover
   letter, (2) write a LaTeX document, (3) create PDF with tables/charts/images,
   (4) compile a .tex file, (5) make a report/invoice/presentation, (6) anything
@@ -113,6 +113,9 @@ bash <skill_path>/scripts/init_document_project.sh ./my-document \
 
 bash <skill_path>/scripts/check_document_project.sh ./my-document
 bash <skill_path>/scripts/build_document_project.sh ./my-document --preview
+
+# Optional reproducible backend for simple projects without bibliography/index/glossary passes
+bash <skill_path>/scripts/build_document_project.sh ./my-document --use-tectonic
 ```
 
 The scaffold creates `document.yaml`, `main.tex`, `content/`, `figures/`, `data/`, `outputs/`, and `build/`. Full guide: [references/project-scaffolding.md](references/project-scaffolding.md).
@@ -202,6 +205,9 @@ bash <skill_path>/scripts/compile_latex.sh document.tex --engine lualatex
 # Use latexmk for automatic multi-pass (recommended for complex documents)
 bash <skill_path>/scripts/compile_latex.sh document.tex --use-latexmk --preview
 
+# Use Tectonic for simple reproducible builds when installed
+bash <skill_path>/scripts/compile_latex.sh document.tex --use-tectonic
+
 # PDF/A output for thesis submissions and archival compliance
 bash <skill_path>/scripts/compile_latex.sh document.tex --pdfa
 
@@ -223,6 +229,7 @@ bash <skill_path>/scripts/compile_latex.sh document.tex --clean
 | `--preview-dir DIR` | Directory for PNG output (default: same as .tex file) |
 | `--engine ENGINE` | Force engine: `pdflatex`, `xelatex`, or `lualatex` |
 | `--use-latexmk` | Use `latexmk` as compilation backend (auto multi-pass, bibliography, index) |
+| `--use-tectonic` | Use Tectonic backend for simple reproducible builds; mutually exclusive with `--use-latexmk` and `--engine` |
 | `--verbose` | Show full compilation output (all engine logs) |
 | `--quiet` | Suppress all non-error output |
 | `--clean` | Remove auxiliary files (.aux, .log, .bbl, .fdb_latexmk, etc.) and exit |
@@ -234,6 +241,8 @@ bash <skill_path>/scripts/compile_latex.sh document.tex --clean
 **Manual multi-pass (default):** Runs the engine multiple times with bibliography/index/glossary passes as needed. This is the traditional approach and works without `latexmk` installed.
 
 **latexmk (`--use-latexmk`):** Uses `latexmk` for automatic dependency-driven compilation. Recommended for complex documents with bibliographies, indexes, glossaries, or cross-references -- latexmk determines the correct number of passes automatically. Requires `latexmk` (included with TeX Live).
+
+**Tectonic (`--use-tectonic`):** Uses the `tectonic` binary for simple reproducible, bundle-based builds. The script does not auto-install Tectonic. This backend refuses explicit `--engine` values and documents that require BibTeX, biber, makeindex, or makeglossaries; use the default backend or `--use-latexmk` for those documents.
 
 ### Log Filtering (texfot)
 

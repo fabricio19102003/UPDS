@@ -16,6 +16,9 @@ bash <skill_path>/scripts/check_document_project.sh ./my-document
 
 # Build using compile_latex.sh and copy PDF into outputs/
 bash <skill_path>/scripts/build_document_project.sh ./my-document --preview
+
+# Optional reproducible backend for simple projects without bibliography/index/glossary passes
+bash <skill_path>/scripts/build_document_project.sh ./my-document --use-tectonic
 ```
 
 Use this workflow for reports, papers, books, theses, or any document expected to evolve across sessions. See `references/project-scaffolding.md` for the layout contract and runtime rules.
@@ -183,6 +186,18 @@ bash <skill_path>/scripts/latex_citation_extract.sh document.tex --bib refs.bib 
 ```
 
 ## Compilation Tools
+
+### Tectonic Backend
+
+```bash
+# Compile with Tectonic instead of the default TeX engine workflow
+bash <skill_path>/scripts/compile_latex.sh document.tex --use-tectonic
+
+# Project scaffold build with Tectonic
+bash <skill_path>/scripts/build_document_project.sh ./my-document --use-tectonic
+```
+
+Use Tectonic when the user wants a more reproducible, bundle-based compiler and already has `tectonic` installed. `--use-tectonic` is mutually exclusive with `--use-latexmk` and does not accept `--engine`; Tectonic selects its own engine. This wrapper refuses `--use-tectonic` for documents that require BibTeX, biber, makeindex, or makeglossaries auxiliary passes. Use the default backend or `--use-latexmk` for those documents. The script does not auto-install Tectonic.
 
 ### Auto-Fix Mode
 
