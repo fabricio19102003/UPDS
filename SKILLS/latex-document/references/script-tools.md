@@ -20,6 +20,25 @@ bash <skill_path>/scripts/build_document_project.sh ./my-document --preview
 
 Use this workflow for reports, papers, books, theses, or any document expected to evolve across sessions. See `references/project-scaffolding.md` for the layout contract and runtime rules.
 
+## Submission Packaging Tools
+
+```bash
+# Package final PDF, sources, bibliography, figures/data, manifest, and checklist
+bash <skill_path>/scripts/package_submission.sh ./my-document --archive
+
+# Use a custom handoff name
+bash <skill_path>/scripts/package_submission.sh ./my-document --name final-report --archive
+
+# Source-only handoff when the PDF is not built yet
+bash <skill_path>/scripts/package_submission.sh ./my-document --allow-missing-pdf
+
+# Include generated previews/outputs or build logs only when requested
+bash <skill_path>/scripts/package_submission.sh ./my-document --include-outputs
+bash <skill_path>/scripts/package_submission.sh ./my-document --include-build
+```
+
+Use this workflow when a document is ready for course submission, client delivery, review, archive, or conference/journal handoff. Custom package directories must stay under project `outputs/`; package names must use safe filename characters only. The script refuses unsafe or existing non-package output paths. See `references/submission-packaging.md` for package layout and checklist rules.
+
 ## PDF Tools
 
 ### PDF-to-Images Script

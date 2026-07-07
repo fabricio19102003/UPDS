@@ -21,6 +21,8 @@ PASSED_SUITES=0
 FAILED_SUITES=0
 SKIPPED_SUITES=0
 HAS_BC=false
+PASS_THRESHOLD_PERCENT=95
+PERCENT_DENOMINATOR=100
 
 declare -a SUITE_NAMES
 declare -a SUITE_RESULTS
@@ -173,14 +175,19 @@ print_summary() {
   echo ""
   echo -e "${CYAN}========================================${NC}"
 
-  # Exit status
-  if [[ $FAILED_SUITES -eq 0 ]]; then
-    echo -e "${GREEN}All test suites passed!${NC}"
+  # Exit status: require no failures and at least PASS_THRESHOLD_PERCENT of discovered suites passing.
+  local required_passed=$(( (TOTAL_SUITES * PASS_THRESHOLD_PERCENT + PERCENT_DENOMINATOR - 1) / PERCENT_DENOMINATOR ))
+  if [[ $FAILED_SUITES -eq 0 && $PASSED_SUITES -ge $required_passed ]]; then
+    echo -e "${GREEN}All required test suites passed!${NC}"
     return 0
-  else
-    echo -e "${RED}Some test suites failed.${NC}"
-    return 1
   fi
+
+  if [[ $FAILED_SUITES -gt 0 ]]; then
+    echo -e "${RED}Some test suites failed.${NC}"
+  else
+    echo -e "${RED}Too many suites skipped: ${PASSED_SUITES}/${TOTAL_SUITES} passed, ${required_passed}/${TOTAL_SUITES} required.${NC}"
+  fi
+  return 1
 }
 
 # Main execution
@@ -196,8 +203,8 @@ main() {
     echo ""
   fi
 
-  # List of test suites to run
-  # Note: Some test suites may not exist yet - they'll be skipped
+  # List of test suites to run.
+  # Missing optional suites are reported as skipped, but the final pass threshold still applies.
 
   echo "Discovering test suites..."
   echo ""
@@ -208,10 +215,11 @@ main() {
   # Run test_templates.sh
   run_test_suite "${SCRIPT_DIR}/test_templates.sh" "Template Compilation Tests"
 
-  # Project scaffolding tests
+  # Project workflow tests
   run_test_suite "${SCRIPT_DIR}/test_project_scaffolding.sh" "Project Scaffolding Tests"
+  run_test_suite "${SCRIPT_DIR}/test_submission_packager.sh" "Submission Packager Tests"
 
-  # Future test suites (will be skipped if not present)
+  # Additional suites (skips count against the final pass threshold when excessive)
   run_test_suite "${SCRIPT_DIR}/test_python_scripts.py" "Python Scripts Tests"
   run_test_suite "${SCRIPT_DIR}/test_pdf_utils.sh" "PDF Utilities Tests"
   run_test_suite "${SCRIPT_DIR}/test_analysis_tools.sh" "Analysis Tools Tests"
