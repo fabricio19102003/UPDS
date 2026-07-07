@@ -67,6 +67,8 @@ description: >
 
 Create any LaTeX document, compile to PDF, and generate PNG previews. Convert PDFs of any type to LaTeX.
 
+For the v2 production workflow overview — scaffolding, backend selection, accessibility readiness, submission packaging, and test-suite stabilization — read [references/v2-overview.md](references/v2-overview.md).
+
 ## Workflow: Create Documents
 
 1. Determine document type (resume, report, letter, invoice, article, thesis, academic CV, presentation, poster, exam, book, cheat sheet)

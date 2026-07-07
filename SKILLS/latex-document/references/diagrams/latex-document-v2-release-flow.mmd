@@ -1,0 +1,32 @@
+%%{init: {"theme": "base", "themeVariables": {"background": "#1f1f28", "primaryColor": "#2a2a37", "primaryTextColor": "#dcd7ba", "primaryBorderColor": "#7e9cd8", "lineColor": "#7e9cd8", "secondaryColor": "#223249", "tertiaryColor": "#363646", "fontFamily": "Inter, Segoe UI, sans-serif", "clusterBkg": "#1f1f28", "clusterBorder": "#54546d", "edgeLabelBackground": "#1f1f28"}}}%%
+flowchart TD
+  start(["Start a document"])
+  init["Initialize project\ninit_document_project.sh"]
+  author["Author content\ncontent/*.tex, figures/, data/"]
+  check["Check structure\ncheck_document_project.sh"]
+  build{"Choose backend"}
+  default["Default build\nbuild_document_project.sh"]
+  tectonic["Tectonic build\n--use-tectonic"]
+  access["Accessibility readiness\ncheck_accessibility.sh"]
+  strict{"Strict pass?"}
+  fix["Fix metadata, captions, URLs, PDF state"]
+  package["Package submission\npackage_submission.sh"]
+  verify["Run tests / spot checks"]
+  deliver(["Deliver package"])
+
+  start --> init --> author --> check --> build
+  build --> default --> access
+  build --> tectonic --> access
+  access --> strict
+  strict -- "No" --> fix --> author
+  strict -- "Yes" --> package --> verify --> deliver
+
+  classDef startEnd fill:#2b3328,stroke:#98bb6c,color:#dcd7ba;
+  classDef action fill:#223249,stroke:#7e9cd8,color:#dcd7ba;
+  classDef decision fill:#43242b,stroke:#e46876,color:#dcd7ba;
+  classDef quality fill:#363646,stroke:#e6c384,color:#dcd7ba;
+
+  class start,deliver startEnd;
+  class init,author,check,default,tectonic,package,verify action;
+  class build,strict decision;
+  class access,fix quality;

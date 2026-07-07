@@ -1,0 +1,52 @@
+%%{init: {"theme": "base", "themeVariables": {"background": "#1f1f28", "primaryColor": "#2a2a37", "primaryTextColor": "#dcd7ba", "primaryBorderColor": "#7e9cd8", "lineColor": "#7e9cd8", "secondaryColor": "#223249", "tertiaryColor": "#363646", "fontFamily": "Inter, Segoe UI, sans-serif", "clusterBkg": "#1f1f28", "clusterBorder": "#54546d", "edgeLabelBackground": "#1f1f28"}}}%%
+flowchart LR
+  user["Author / reviewer"]
+
+  subgraph source["Source workspace"]
+    scaffold["Project scaffolding\nmain.tex + content/ + assets"]
+    metadata["document.yaml\nmetadata and defaults"]
+  end
+
+  subgraph build["Build backends"]
+    default["Default multi-pass LaTeX"]
+    latexmk["latexmk option"]
+    tectonic["Tectonic option\nconstrained reproducible builds"]
+  end
+
+  subgraph quality["Quality gates"]
+    check["Project structure check"]
+    access["Accessibility readiness check\nmetadata, captions, URLs, PDF probes"]
+    tests["Shell test suite\nportable dependency skips"]
+  end
+
+  subgraph delivery["Delivery"]
+    package["Submission packager\nPDF + source + manifest"]
+    archive["Archive / course / client handoff"]
+  end
+
+  user --> scaffold
+  scaffold --> metadata
+  metadata --> check
+  check --> default
+  check --> latexmk
+  check --> tectonic
+  default --> access
+  latexmk --> access
+  tectonic --> access
+  access --> package
+  tests -. validates .-> check
+  tests -. validates .-> access
+  tests -. validates .-> package
+  package --> archive
+
+  classDef actor fill:#2d4f67,stroke:#7e9cd8,color:#dcd7ba;
+  classDef source fill:#223249,stroke:#7e9cd8,color:#dcd7ba;
+  classDef build fill:#2a2a37,stroke:#957fb8,color:#dcd7ba;
+  classDef quality fill:#363646,stroke:#e6c384,color:#dcd7ba;
+  classDef delivery fill:#2b3328,stroke:#98bb6c,color:#dcd7ba;
+
+  class user actor;
+  class scaffold,metadata source;
+  class default,latexmk,tectonic build;
+  class check,access,tests quality;
+  class package,archive delivery;
